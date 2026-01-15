@@ -149,42 +149,34 @@ print("Distance totale (m) :", distance_totale)
 
 plt.figure(figsize=(6,6))
 
-# 2️⃣ Tracé de tous les points du graphe
+# --- 1) Tracé de toutes les routes ---
+for node_id, node in dico.items():
+    lat1 = node["lat"]
+    lon1 = node["lon"]
+
+    for voisin_id in node["voisins"]:
+        voisin = dico[voisin_id]
+        lat2 = voisin["lat"]
+        lon2 = voisin["lon"]
+
+        # tracé d'une ligne (route)
+        plt.plot([lon1, lon2], [lat1, lat2], linewidth=0.5)
+
+# --- 2) Tracé de tous les points ---
 lats = [v["lat"] for v in dico.values()]
 lons = [v["lon"] for v in dico.values()]
-plt.scatter(lons, lats, s=10, color='blue', label='Noeuds')
+plt.scatter(lons, lats, s=6, color='blue', label='Noeuds')
 
-# 3️⃣ Tracé du plus court chemin (en rouge)
+# --- 3) Tracé du plus court chemin ---
 if chemin:
     path_lats = [dico[n]["lat"] for n in chemin]
     path_lons = [dico[n]["lon"] for n in chemin]
-    plt.plot(path_lons, path_lats, color='red', linewidth=3, label='Plus court chemin')
-    plt.scatter(path_lons, path_lats, color='red', s=20)
+    plt.plot(path_lons, path_lats, color='red', linewidth=2.5, label='Plus court chemin')
+    plt.scatter(path_lons, path_lats, color='red', s=12)
 
 plt.xlabel("Longitude")
 plt.ylabel("Latitude")
-plt.title("Graphe routier avec plus court chemin")
+plt.title("Réseau routier et plus court chemin")
 plt.grid()
 plt.legend()
 plt.show()
-
-
-# # Tracé des routes (liaisons entre voisins)
-# for node_id, node in dico.items():
-#     lat1 = node["lat"]
-#     lon1 = node["lon"]
-
-#     for voisin_id in node["voisins"]:
-#         # Pour éviter les doublons
-#         if voisin_id > node_id:
-#             voisin = dico[voisin_id]
-#             lat2 = voisin["lat"]
-#             lon2 = voisin["lon"]
-
-#             plt.plot([lon1, lon2], [lat1, lat2])
-
-# plt.xlabel("Longitude")
-# plt.ylabel("Latitude")
-# plt.title("Graphe routier")
-# plt.grid()
-# plt.show()
