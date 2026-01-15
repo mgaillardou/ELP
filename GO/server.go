@@ -23,9 +23,9 @@ type DijkstraResult struct {
 }
 
 type Job struct {
-	Start    string
-	Dest     string
-	ResultCh chan DijkstraResult
+    Start    string
+    ResultCh chan DijkstraResult
+    Graph    map[string]Node
 }
 
 // --- Dijkstra & minimum functions (same as before) ---
@@ -91,75 +91,88 @@ func dijkstra(graph map[string]Node, start string) map[string]float64 {
 	return distances
 }
 
-// --- Worker pool ---
-func worker(id int, jobs <-chan Job, graph map[string]Node) {
-	for job := range jobs {
-		fmt.Printf("Worker %d computing Dijkstra from %s\n", id, job.Start)
-		distances := dijkstra(graph, job.Start)
-		job.ResultCh <- DijkstraResult{
-			Start:     job.Start,
-			Distances: map[string]float64{job.Dest: distances[job.Dest]},
-		}
-	}
+// --- Dans handleClient ---
+func handleClient(conn net.Conn, jobs chan Job) {
+    defer conn.Close()
+    reader := bufio.NewReader(conn)
+
+    msg, err := reader.ReadString('\n')
+    if err != nil { return }
+
+    path := strings.TrimSpace(msg)
+    graph := loadGraph(path) 
+    nodeCount := len(graph)
+
+    resultCh := make(chan DijkstraResult, nodeCount)
+
+    // Lancement de l'envoi des jobs
+    go func() {
+        for nodeName := range graph {
+            jobs <- Job{Start: nodeName, ResultCh: resultCh, Graph: graph}
+        }
+    }()
+
+    allResults := make(map[string]map[string]float64)
+    fmt.Printf("Début du calcul pour %d nœuds...\n", nodeCount)
+    
+    for i := 0; i < nodeCount; i++ {
+        res := <-resultCh
+        allResults[res.Start] = res.Distances
+        if i%50 == 0 {
+            fmt.Printf("Avancement : %d/%d\n", i, nodeCount)
+        }
+    }
+
+	// ... (après la boucle de collecte des résultats)
+
+    // Nettoyage des valeurs +Inf avant l'encodage
+    for _, distances := range allResults {
+        for destNode, dist := range distances {
+            if math.IsInf(dist, 1) {
+                distances[destNode] = -1
+            }
+        }
+    }
+	encoder := json.NewEncoder(conn)
+    err = encoder.Encode(allResults)
+    if err != nil {
+        fmt.Println("Erreur lors de l'envoi du JSON:", err)
+    }
+	
+    fmt.Println("Calcul APSP terminé et envoyé.")
 }
 
-// --- Client handler (server side) ---
-func handleClient(conn net.Conn, jobs chan Job, graph map[string]Node) {
-	defer conn.Close()
-	reader := bufio.NewReader(conn)
-
-	for {
-		msg, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Println("Client disconnected")
-			return
-		}
-
-		msg = strings.TrimSpace(msg)
-		parts := strings.Split(msg, " ")
-		if len(parts) != 2 {
-			conn.Write([]byte("Error: send two nodes, e.g., A C\n"))
-			continue
-		}
-
-		start, dest := parts[0], parts[1]
-		resultCh := make(chan DijkstraResult)
-
-		// Send job to worker pool
-		jobs <- Job{Start: start, Dest: dest, ResultCh: resultCh}
-
-		// Wait for result
-		result := <-resultCh
-
-		// Send JSON response back to client
-		jsonResp, _ := json.Marshal(result)
-		conn.Write(append(jsonResp, '\n'))
-	}
+// --- Dans worker (ajusté pour renvoyer toutes les distances) ---
+func worker(id int, jobs <-chan Job) {
+    for job := range jobs {
+        // Le worker traite le job et envoie dans le channel spécifique au client
+        distances := dijkstra(job.Graph, job.Start)
+        job.ResultCh <- DijkstraResult{
+            Start:     job.Start,
+            Distances: distances,
+        }
+    }
 }
 
 // --- Main ---
 func main() {
-	graph := loadGraph("/home/lboubaker/ELP-from-git/GO/sortie.json")
+    // Supprimez loadGraph d'ici, on le fera par client
+    numWorkers := 4
+    jobs := make(chan Job, 100)
 
-	numWorkers := 4
-	jobs := make(chan Job, 100)
+    for w := 1; w <= numWorkers; w++ {
+        go worker(w, jobs) // Appel sans le graphe
+    }
 
-	// Start worker pool
-	for w := 1; w <= numWorkers; w++ {
-		go worker(w, jobs, graph)
-	}
+    ln, err := net.Listen("tcp", ":9000")
+    if err != nil { panic(err) }
+    fmt.Println("Server listening on :9000")
 
-	// Start TCP server
-	ln, err := net.Listen("tcp", ":9000")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Server listening on :9000")
-
-	for {
-		conn, _ := ln.Accept()
-		go handleClient(conn, jobs, graph)
-	}
+    for {
+        conn, _ := ln.Accept()
+        // On ne passe plus 'graph' ici (erreur 166 corrigée)
+        go handleClient(conn, jobs) 
+    }
 }
 
 func loadGraph(path string) map[string]Node {
