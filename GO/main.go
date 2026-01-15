@@ -6,6 +6,8 @@ import (
 	"log" //pour la gestion des erreurs
 	"math"
 	"os" //pour ouvrir le fichier json
+	"runtime"
+	"time"
 )
 
 type Node struct {
@@ -14,6 +16,12 @@ type Node struct {
 	Lon     float64            `json:"lon"`
 	Voisins map[string]float64 `json:"voisins"`
 }
+
+type DijkstraResult struct {
+    Start     string
+    Distances map[string]float64
+}
+
 
 func minimum(distances map[string]float64, visite map[string]bool) string {
 	vMini := math.Inf(1)
@@ -32,7 +40,7 @@ func minimum(distances map[string]float64, visite map[string]bool) string {
 	return kMini
 }
 
-func dijkstra(graph map[string]Node, start, end string) {
+func dijkstra(graph map[string]Node, start string) map[string]float64 {
 	distances := make(map[string]float64)
 	precedent := make(map[string]string)
 	visite := make(map[string]bool)
@@ -78,18 +86,25 @@ func dijkstra(graph map[string]Node, start, end string) {
 			}
 		}
 	}
-	fmt.Print("Chemin : ")
-	cur := end
-	for cur != start {
-		fmt.Printf("%s -- ", cur)
-		cur = precedent[cur]
-	}
-	fmt.Println(start)
+	fmt.Println("sommet traite :", start)
+	return distances
+} 
+
+func worker(id int, jobs <-chan string, results chan<- DijkstraResult, graph map[string]Node) {
+    for start := range jobs {
+        fmt.Printf("Worker %d traite Dijkstra depuis %s\n", id, start)
+        dist := dijkstra(graph, start)
+        results <- DijkstraResult{Start: start, Distances: dist}
+    }
 }
 
-func main() {
 
-	dir := "/Users/gaillardou/Desktop/ELP/GO" //chemin vers le fichier
+
+func main() {
+	
+
+	//dir := "/Users/gaillardou/Desktop/ELP/GO" //chemin vers le fichier
+	dir := "/home/lboubaker/ELP-from-git/GO"
 	files, err := os.ReadDir(dir)             //liste fichiers et dossiers present dans le dossier
 	if err != nil {
 		log.Fatal(err) //Si le dossier n’existe pas ou n’est pas accessible ==> le programme affiche l’erreur et s'arrête immédiatement
@@ -112,6 +127,61 @@ func main() {
 		//associe chaque clé à son Node
 	}
 
-	dijkstra(graph, "195222", "12067744865")
+	// Channels
+	nb_noeuds:=125
+	numWorkers := runtime.NumCPU()
+    //numWorkers := 50
+	fmt.Println("nb workers ",numWorkers)
+	jobs := make(chan string, 500)
+	results := make(chan DijkstraResult, 500) // channel pour DijkstraResult
+
+    // Lancer 3 workers
+    for w := 1; w <= numWorkers; w++ {
+        go worker(w, jobs, results, graph)
+    }
+
+	// Start timer
+    startTime := time.Now()
+
+    // Job feeder : seulement 10 noeuds
+    count := 0
+    for start := range graph {
+        jobs <- start
+        count++
+        if count >= nb_noeuds {
+            break
+        }
+    }
+    close(jobs)
+
+    // Récupérer les résultats
+    allDistances := make(map[string]map[string]float64)
+    for i := 0; i < nb_noeuds; i++ {
+        res := <-results
+        allDistances[res.Start] = res.Distances
+    }
+
+    file, err := os.Create("all_distances.json") // crée ou écrase le fichier
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	elapsed := time.Since(startTime)
+    fmt.Printf("Temps mis pour traiter 1000 nodes: %s\n", elapsed)
+
+	// Transformer allDistances en JSON indenté
+	jsonData, err := json.MarshalIndent(allDistances, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Écrire dans le fichier
+	_, err = file.Write(jsonData)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Toutes les distances ont été enregistrées dans all_distances.json")
 
 }
