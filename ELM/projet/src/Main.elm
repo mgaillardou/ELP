@@ -1,129 +1,149 @@
-module Main exposing (main)
+module Main exposing (..)
 
 import Browser
-import Html exposing (Html, div, input, text, h1, button, label)
-import Html.Attributes exposing (style, value, type_)
-import Html.Events exposing (onInput, onClick)
+import Html exposing (Html, div, input, text, h1)
+import Html.Attributes exposing (style, value, placeholder)
+import Html.Events exposing (onInput)
 import Parser exposing (..)
 import Svg exposing (Svg, svg, polyline)
 import Svg.Attributes as SvgAttr
-import Svg.Events
-import Json.Decode as Decode
 
--- 1. MODÈLE DE DONNÉES
-type Shape = Carre | Triangle | Cercle | Rectangle
-
+-- 1. TYPES DU LANGAGE TURTLE
 type Command
-    = Avancer Int 
-    | Gauche Int 
-    | Droite Int 
-    | Repeter Int (List Command)
-    | Teleporter Float Float -- Déplacement sans dessiner
+    = Forward Int
+    | Left Int
+    | Right Int
+    | Repeat Int (List Command)
 
-type alias Point = ( Float, Float )
-
-type alias Model =
-    { taille : Int
-    , formeSelectionnee : Shape
-    , historique : List (List Command) -- Liste de toutes les formes placées
-    }
-
--- 2. LOGIQUE DES FORMES (Génère le code Turtle selon la forme)
-genererForme : Shape -> Int -> List Command
-genererForme forme dim =
-    let
-        code = case forme of
-            Carre -> "repeat 4 [ forward " ++ String.fromInt dim ++ " left 90 ]"
-            Triangle -> "repeat 3 [ forward " ++ String.fromInt dim ++ " left 120 ]"
-            Cercle -> "repeat 36 [ forward " ++ String.fromInt (max 1 (dim // 10)) ++ " left 10 ]"
-            Rectangle -> "forward " ++ String.fromInt dim ++ " left 90 forward " ++ String.fromInt (dim // 2) ++ " left 90 forward " ++ String.fromInt dim ++ " left 90 forward " ++ String.fromInt (dim // 2) ++ " left 90"
-    in
-    -- On utilise notre parser pour transformer le texte en commandes
-    Parser.run (loop [] (\acc -> oneOf [ succeed (\c -> Loop (c :: acc)) |= commandParser |. spaces, succeed (Done (List.reverse acc)) ])) (String.toLower code)
-        |> Result.withDefault []
-
--- 3. PARSER DE BASE
+-- 2. PARSER
 commandParser : Parser Command
 commandParser =
     oneOf
-        [ succeed Avancer |. keyword "forward" |. spaces |= int
-        , succeed Gauche |. keyword "left" |. spaces |= int
-        , succeed Droite |. keyword "right" |. spaces |= int
-        , succeed Repeter |. keyword "repeat" |. spaces |= int |. spaces 
-          |. symbol "[" |. spaces |= lazy (\_ -> succeed identity |= (loop [] (\acc -> oneOf [ succeed (\c -> Loop (c :: acc)) |= commandParser |. spaces, succeed (Done (List.reverse acc)) ]))) |. spaces |. symbol "]"
+        [ succeed Forward |. keyword "forward" |. spaces |= int
+        , succeed Left |. keyword "left" |. spaces |= int
+        , succeed Right |. keyword "right" |. spaces |= int
+        , succeed Repeat
+            |. keyword "repeat" |. spaces |= int |. spaces
+            |. symbol "[" |. spaces
+            |= lazy (\_ -> commandsParser)
+            |. spaces |. symbol "]"
         ]
 
--- 4. INTERPRÉTEUR (Transforme les commandes en coordonnées SVG)
-interpreter : List (List Command) -> List (List Point)
-interpreter historique =
+commandsParser : Parser (List Command)
+commandsParser =
+    succeed identity
+        |. spaces
+        |= Parser.loop [] commandsStep
+
+commandsStep : List Command -> Parser (Step (List Command) (List Command))
+commandsStep acc =
+    oneOf
+        [ succeed (\cmd -> Loop (cmd :: acc)) |= commandParser |. spaces
+        , succeed (Done (List.reverse acc))
+        ]
+
+parseTurtle : String -> Result (List DeadEnd) (List Command)
+parseTurtle input =
+    Parser.run commandsParser (String.toLower input)
+
+-- 3. LOGIQUE DE LA TORTUE (INTERPRÉTEUR)
+type alias Point = ( Float, Float )
+
+type alias TurtleState =
+    { x : Float
+    , y : Float
+    , angle : Float
+    , path : List Point
+    }
+
+commandsToPoints : List Command -> List Point
+commandsToPoints commands =
     let
-        executer cmd state =
+        initialState = { x = 0, y = 0, angle = 0, path = [ ( 0, 0 ) ] }
+        
+        updateState : Command -> TurtleState -> TurtleState
+        updateState cmd state =
             case cmd of
-                Teleporter tx ty -> 
-                    { state | x = tx, y = ty, tout = state.actuel :: state.tout, actuel = [ (tx, ty) ] }
-                Avancer d ->
-                    let 
-                        nx = state.x + toFloat d * cos (degrees state.angle)
-                        ny = state.y + toFloat d * sin (degrees state.angle)
-                    in { state | x = nx, y = ny, actuel = state.actuel ++ [ (nx, ny) ] }
-                Gauche a -> { state | angle = state.angle - toFloat a }
-                Droite a -> { state | angle = state.angle + toFloat a }
-                Repeter n cmds -> List.foldl (\_ s -> List.foldl executer s cmds) state (List.range 1 n)
+                Forward dist ->
+                    let
+                        rad = degrees state.angle
+                        newX = state.x + toFloat dist * cos rad
+                        newY = state.y + toFloat dist * sin rad
+                    in
+                    { state | x = newX, y = newY, path = state.path ++ [ ( newX, newY ) ] }
 
-        initS = { x = 0, y = 0, angle = 0, actuel = [], tout = [] }
-        finalS = List.foldl (\cmds s -> List.foldl executer s cmds) initS historique
+                Left angle ->
+                    { state | angle = state.angle - toFloat angle }
+
+                Right angle ->
+                    { state | angle = state.angle + toFloat angle }
+
+                Repeat n subCmds ->
+                    List.foldl (\_ s -> List.foldl updateState s subCmds) state (List.range 1 n)
     in
-    finalS.actuel :: finalS.tout
+    (List.foldl updateState initialState commands).path
 
--- 5. UPDATE
-type Msg = ChoisirForme Shape | ChangerTaille String | Cliquer Ecran | Reset
+-- 4. ARCHITECTURE ELM (MVU)
+type alias Model =
+    { input : String
+    , commands : List Command
+    , error : Bool
+    }
 
-type alias Ecran = { x : Float, y : Float }
+type Msg = UserTyped String
+
+init : Model
+init = { input = "", commands = [], error = False }
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        ChoisirForme f -> { model | formeSelectionnee = f }
-        ChangerTaille t -> { model | taille = String.toInt t |> Maybe.withDefault 0 }
-        Reset -> { model | historique = [] }
-        Cliquer pos ->
-            let
-                nouvelleForme = [ Teleporter pos.x pos.y ] ++ genererForme model.formeSelectionnee model.taille
-            in
-            { model | historique = model.historique ++ [ nouvelleForme ] }
+        UserTyped txt ->
+            case parseTurtle txt of
+                Ok cmds -> { model | input = txt, commands = cmds, error = False }
+                Err _ -> { model | input = txt, error = True }
 
--- 6. VUE
-view : Model -> Html Msg
-view model =
-    div [ style "text-align" "center", style "padding" "20px", style "font-family" "sans-serif" ]
-        [ h1 [] [ text "Turtle Interactive" ]
-        , div [ style "margin-bottom" "20px" ]
-            [ boutonForme Carre "Carré" model
-            , boutonForme Triangle "Triangle" model
-            , boutonForme Cercle "Cercle" model
-            , boutonForme Rectangle "Rectangle" model
-            , label [ style "margin" "0 10px" ] [ text "Taille : " ]
-            , input [ type_ "number", value (String.fromInt model.taille), onInput ChangerTaille, style "width" "50px" ] []
-            , button [ onClick Reset, style "margin-left" "10px", style "background" "red", style "color" "white" ] [ text "Effacer" ]
-            ]
-        , div [ style "color" "#888", style "font-size" "12px" ] [ text "Cliquez dans le cadre pour dessiner" ]
-        , svg
-            [ SvgAttr.width "600", SvgAttr.height "400", style "border" "2px solid black", style "background" "white"
-            , Svg.Events.on "mousedown" (Decode.map Cliquer (Decode.map2 Ecran (Decode.field "offsetX" Decode.float) (Decode.field "offsetY" Decode.float)))
-            ]
-            (interpreter model.historique |> List.map (\pts -> polyline [ SvgAttr.points (pointsToStr pts), SvgAttr.fill "none", SvgAttr.stroke "blue", SvgAttr.strokeWidth "2" ] []))
+-- 5. VUE ET DESSIN SVG
+display : List Command -> Html msg
+display cmds =
+    let
+        pts = commandsToPoints cmds
+        pointsString =
+            pts
+                |> List.map (\( x, y ) -> String.fromFloat x ++ "," ++ String.fromFloat y)
+                |> String.join " "
+    in
+    svg
+        [ SvgAttr.width "500", SvgAttr.height "500", SvgAttr.viewBox "-250 -250 500 500"
+        , style "border" "1px solid #ccc", style "background" "#f9f9f9"
+        ]
+        [ polyline
+            [ SvgAttr.points pointsString
+            , SvgAttr.fill "none"
+            , SvgAttr.stroke "#2ecc71"
+            , SvgAttr.strokeWidth "3"
+            , SvgAttr.strokeLinecap "round"
+            , SvgAttr.strokeLinejoin "round"
+            ] []
         ]
 
-boutonForme : Shape -> String -> Model -> Html Msg
-boutonForme f label model =
-    button 
-        [ onClick (ChoisirForme f)
-        , style "padding" "10px", style "margin" "2px"
-        , style "background" (if model.formeSelectionnee == f then "blue" else "#ddd")
-        , style "color" (if model.formeSelectionnee == f then "white" else "black")
-        ] [ text label ]
+view : Model -> Html Msg
+view model =
+    div [ style "display" "flex", style "flex-direction" "column", style "align-items" "center", style "padding" "40px", style "font-family" "sans-serif" ]
+        [ h1 [] [ text "Elm Turtle Graphics" ]
+        , input 
+            [ placeholder "Ex: repeat 36 [ forward 10 left 10 ]"
+            , value model.input
+            , onInput UserTyped
+            , style "width" "480px", style "padding" "12px", style "font-size" "18px"
+            , style "border" (if model.error && model.input /= "" then "2px solid red" else "2px solid #3498db")
+            , style "outline" "none", style "border-radius" "8px"
+            ] []
+        , div [ style "margin-top" "20px" ] [ display model.commands ]
+        , if model.error && model.input /= "" then
+            div [ style "color" "red", style "margin-top" "10px" ] [ text "Syntaxe invalide..." ]
+          else
+            text ""
+        ]
 
-pointsToStr : List Point -> String
-pointsToStr = List.map (\(x,y) -> String.fromFloat x ++ "," ++ String.fromFloat y) >> String.join " "
-
-main = Browser.sandbox { init = { taille = 50, formeSelectionnee = Carre, historique = [] }, update = update, view = view }
+main = Browser.sandbox { init = init, update = update, view = view }

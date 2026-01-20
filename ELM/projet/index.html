@@ -4602,7 +4602,8 @@ var $elm$core$Set$toList = function (_v0) {
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
-var $author$project$Main$Carre = {$: 'Carre'};
+var $elm$core$Basics$False = {$: 'False'};
+var $author$project$Main$init = {commands: _List_Nil, error: false, input: ''};
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
 };
@@ -4624,7 +4625,6 @@ var $elm$core$Result$Ok = function (a) {
 var $elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 'OneOf', a: a};
 };
-var $elm$core$Basics$False = {$: 'False'};
 var $elm$core$Basics$add = _Basics_add;
 var $elm$core$Maybe$Just = function (a) {
 	return {$: 'Just', a: a};
@@ -5333,29 +5333,25 @@ var $elm$browser$Browser$sandbox = function (impl) {
 			view: impl.view
 		});
 };
-var $author$project$Main$Teleporter = F2(
-	function (a, b) {
-		return {$: 'Teleporter', a: a, b: b};
-	});
 var $elm$parser$Parser$Done = function (a) {
 	return {$: 'Done', a: a};
+};
+var $author$project$Main$Forward = function (a) {
+	return {$: 'Forward', a: a};
+};
+var $author$project$Main$Left = function (a) {
+	return {$: 'Left', a: a};
 };
 var $elm$parser$Parser$Loop = function (a) {
 	return {$: 'Loop', a: a};
 };
-var $author$project$Main$Avancer = function (a) {
-	return {$: 'Avancer', a: a};
-};
-var $author$project$Main$Droite = function (a) {
-	return {$: 'Droite', a: a};
-};
-var $author$project$Main$Gauche = function (a) {
-	return {$: 'Gauche', a: a};
-};
-var $author$project$Main$Repeter = F2(
+var $author$project$Main$Repeat = F2(
 	function (a, b) {
-		return {$: 'Repeter', a: a, b: b};
+		return {$: 'Repeat', a: a, b: b};
 	});
+var $author$project$Main$Right = function (a) {
+	return {$: 'Right', a: a};
+};
 var $elm$core$Basics$always = F2(
 	function (a, _v0) {
 		return a;
@@ -5877,6 +5873,26 @@ var $elm$parser$Parser$symbol = function (str) {
 			str,
 			$elm$parser$Parser$ExpectingSymbol(str)));
 };
+var $author$project$Main$commandsStep = function (acc) {
+	return $elm$parser$Parser$oneOf(
+		_List_fromArray(
+			[
+				A2(
+				$elm$parser$Parser$keeper,
+				$elm$parser$Parser$succeed(
+					function (cmd) {
+						return $elm$parser$Parser$Loop(
+							A2($elm$core$List$cons, cmd, acc));
+					}),
+				A2(
+					$elm$parser$Parser$ignorer,
+					$author$project$Main$cyclic$commandParser(),
+					$elm$parser$Parser$spaces)),
+				$elm$parser$Parser$succeed(
+				$elm$parser$Parser$Done(
+					$elm$core$List$reverse(acc)))
+			]));
+};
 function $author$project$Main$cyclic$commandParser() {
 	return $elm$parser$Parser$oneOf(
 		_List_fromArray(
@@ -5887,7 +5903,7 @@ function $author$project$Main$cyclic$commandParser() {
 					$elm$parser$Parser$ignorer,
 					A2(
 						$elm$parser$Parser$ignorer,
-						$elm$parser$Parser$succeed($author$project$Main$Avancer),
+						$elm$parser$Parser$succeed($author$project$Main$Forward),
 						$elm$parser$Parser$keyword('forward')),
 					$elm$parser$Parser$spaces),
 				$elm$parser$Parser$int),
@@ -5897,7 +5913,7 @@ function $author$project$Main$cyclic$commandParser() {
 					$elm$parser$Parser$ignorer,
 					A2(
 						$elm$parser$Parser$ignorer,
-						$elm$parser$Parser$succeed($author$project$Main$Gauche),
+						$elm$parser$Parser$succeed($author$project$Main$Left),
 						$elm$parser$Parser$keyword('left')),
 					$elm$parser$Parser$spaces),
 				$elm$parser$Parser$int),
@@ -5907,7 +5923,7 @@ function $author$project$Main$cyclic$commandParser() {
 					$elm$parser$Parser$ignorer,
 					A2(
 						$elm$parser$Parser$ignorer,
-						$elm$parser$Parser$succeed($author$project$Main$Droite),
+						$elm$parser$Parser$succeed($author$project$Main$Right),
 						$elm$parser$Parser$keyword('right')),
 					$elm$parser$Parser$spaces),
 				$elm$parser$Parser$int),
@@ -5919,7 +5935,7 @@ function $author$project$Main$cyclic$commandParser() {
 						$elm$parser$Parser$ignorer,
 						A2(
 							$elm$parser$Parser$ignorer,
-							$elm$parser$Parser$succeed($author$project$Main$Repeter),
+							$elm$parser$Parser$succeed($author$project$Main$Repeat),
 							$elm$parser$Parser$keyword('repeat')),
 						$elm$parser$Parser$spaces),
 					A2(
@@ -5935,44 +5951,32 @@ function $author$project$Main$cyclic$commandParser() {
 						$elm$parser$Parser$ignorer,
 						$elm$parser$Parser$lazy(
 							function (_v0) {
-								return A2(
-									$elm$parser$Parser$keeper,
-									$elm$parser$Parser$succeed($elm$core$Basics$identity),
-									A2(
-										$elm$parser$Parser$loop,
-										_List_Nil,
-										function (acc) {
-											return $elm$parser$Parser$oneOf(
-												_List_fromArray(
-													[
-														A2(
-														$elm$parser$Parser$keeper,
-														$elm$parser$Parser$succeed(
-															function (c) {
-																return $elm$parser$Parser$Loop(
-																	A2($elm$core$List$cons, c, acc));
-															}),
-														A2(
-															$elm$parser$Parser$ignorer,
-															$author$project$Main$cyclic$commandParser(),
-															$elm$parser$Parser$spaces)),
-														$elm$parser$Parser$succeed(
-														$elm$parser$Parser$Done(
-															$elm$core$List$reverse(acc)))
-													]));
-										}));
+								return $author$project$Main$cyclic$commandsParser();
 							}),
 						$elm$parser$Parser$spaces),
 					$elm$parser$Parser$symbol(']')))
 			]));
+}
+function $author$project$Main$cyclic$commandsParser() {
+	return A2(
+		$elm$parser$Parser$keeper,
+		A2(
+			$elm$parser$Parser$ignorer,
+			$elm$parser$Parser$succeed($elm$core$Basics$identity),
+			$elm$parser$Parser$spaces),
+		A2($elm$parser$Parser$loop, _List_Nil, $author$project$Main$commandsStep));
 }
 try {
 	var $author$project$Main$commandParser = $author$project$Main$cyclic$commandParser();
 	$author$project$Main$cyclic$commandParser = function () {
 		return $author$project$Main$commandParser;
 	};
+	var $author$project$Main$commandsParser = $author$project$Main$cyclic$commandsParser();
+	$author$project$Main$cyclic$commandsParser = function () {
+		return $author$project$Main$commandsParser;
+	};
 } catch ($) {
-	throw 'Some top-level definitions from `Main` are causing infinite recursion:\n\n  ┌─────┐\n  │    commandParser\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.1/bad-recursion to learn how to fix it!';}
+	throw 'Some top-level definitions from `Main` are causing infinite recursion:\n\n  ┌─────┐\n  │    commandParser\n  │     ↓\n  │    commandsParser\n  │     ↓\n  │    commandsStep\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.1/bad-recursion to learn how to fix it!';}
 var $elm$parser$Parser$DeadEnd = F3(
 	function (row, col, problem) {
 		return {col: col, problem: problem, row: row};
@@ -6033,260 +6037,156 @@ var $elm$parser$Parser$run = F2(
 		}
 	});
 var $elm$core$String$toLower = _String_toLower;
-var $elm$core$Result$withDefault = F2(
-	function (def, result) {
-		if (result.$ === 'Ok') {
-			var a = result.a;
-			return a;
-		} else {
-			return def;
-		}
-	});
-var $author$project$Main$genererForme = F2(
-	function (forme, dim) {
-		var code = function () {
-			switch (forme.$) {
-				case 'Carre':
-					return 'repeat 4 [ forward ' + ($elm$core$String$fromInt(dim) + ' left 90 ]');
-				case 'Triangle':
-					return 'repeat 3 [ forward ' + ($elm$core$String$fromInt(dim) + ' left 120 ]');
-				case 'Cercle':
-					return 'repeat 36 [ forward ' + ($elm$core$String$fromInt(
-						A2($elm$core$Basics$max, 1, (dim / 10) | 0)) + ' left 10 ]');
-				default:
-					return 'forward ' + ($elm$core$String$fromInt(dim) + (' left 90 forward ' + ($elm$core$String$fromInt((dim / 2) | 0) + (' left 90 forward ' + ($elm$core$String$fromInt(dim) + (' left 90 forward ' + ($elm$core$String$fromInt((dim / 2) | 0) + ' left 90')))))));
-			}
-		}();
-		return A2(
-			$elm$core$Result$withDefault,
-			_List_Nil,
-			A2(
-				$elm$parser$Parser$run,
-				A2(
-					$elm$parser$Parser$loop,
-					_List_Nil,
-					function (acc) {
-						return $elm$parser$Parser$oneOf(
-							_List_fromArray(
-								[
-									A2(
-									$elm$parser$Parser$keeper,
-									$elm$parser$Parser$succeed(
-										function (c) {
-											return $elm$parser$Parser$Loop(
-												A2($elm$core$List$cons, c, acc));
-										}),
-									A2($elm$parser$Parser$ignorer, $author$project$Main$commandParser, $elm$parser$Parser$spaces)),
-									$elm$parser$Parser$succeed(
-									$elm$parser$Parser$Done(
-										$elm$core$List$reverse(acc)))
-								]));
-					}),
-				$elm$core$String$toLower(code)));
-	});
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
+var $author$project$Main$parseTurtle = function (input) {
+	return A2(
+		$elm$parser$Parser$run,
+		$author$project$Main$commandsParser,
+		$elm$core$String$toLower(input));
+};
 var $author$project$Main$update = F2(
 	function (msg, model) {
-		switch (msg.$) {
-			case 'ChoisirForme':
-				var f = msg.a;
-				return _Utils_update(
-					model,
-					{formeSelectionnee: f});
-			case 'ChangerTaille':
-				var t = msg.a;
-				return _Utils_update(
-					model,
-					{
-						taille: A2(
-							$elm$core$Maybe$withDefault,
-							0,
-							$elm$core$String$toInt(t))
-					});
-			case 'Reset':
-				return _Utils_update(
-					model,
-					{historique: _List_Nil});
-			default:
-				var pos = msg.a;
-				var nouvelleForme = _Utils_ap(
-					_List_fromArray(
-						[
-							A2($author$project$Main$Teleporter, pos.x, pos.y)
-						]),
-					A2($author$project$Main$genererForme, model.formeSelectionnee, model.taille));
-				return _Utils_update(
-					model,
-					{
-						historique: _Utils_ap(
-							model.historique,
-							_List_fromArray(
-								[nouvelleForme]))
-					});
+		var txt = msg.a;
+		var _v1 = $author$project$Main$parseTurtle(txt);
+		if (_v1.$ === 'Ok') {
+			var cmds = _v1.a;
+			return _Utils_update(
+				model,
+				{commands: cmds, error: false, input: txt});
+		} else {
+			return _Utils_update(
+				model,
+				{error: true, input: txt});
 		}
 	});
-var $author$project$Main$Cercle = {$: 'Cercle'};
-var $author$project$Main$ChangerTaille = function (a) {
-	return {$: 'ChangerTaille', a: a};
+var $author$project$Main$UserTyped = function (a) {
+	return {$: 'UserTyped', a: a};
 };
-var $author$project$Main$Cliquer = function (a) {
-	return {$: 'Cliquer', a: a};
-};
-var $author$project$Main$Ecran = F2(
-	function (x, y) {
-		return {x: x, y: y};
-	});
-var $author$project$Main$Rectangle = {$: 'Rectangle'};
-var $author$project$Main$Reset = {$: 'Reset'};
-var $author$project$Main$Triangle = {$: 'Triangle'};
-var $author$project$Main$ChoisirForme = function (a) {
-	return {$: 'ChoisirForme', a: a};
-};
-var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var $elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'click',
-		$elm$json$Json$Decode$succeed(msg));
-};
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$Main$boutonForme = F3(
-	function (f, label, model) {
-		return A2(
-			$elm$html$Html$button,
-			_List_fromArray(
-				[
-					$elm$html$Html$Events$onClick(
-					$author$project$Main$ChoisirForme(f)),
-					A2($elm$html$Html$Attributes$style, 'padding', '10px'),
-					A2($elm$html$Html$Attributes$style, 'margin', '2px'),
-					A2(
-					$elm$html$Html$Attributes$style,
-					'background',
-					_Utils_eq(model.formeSelectionnee, f) ? 'blue' : '#ddd'),
-					A2(
-					$elm$html$Html$Attributes$style,
-					'color',
-					_Utils_eq(model.formeSelectionnee, f) ? 'white' : 'black')
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text(label)
-				]));
-	});
-var $elm$html$Html$div = _VirtualDom_node('div');
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
-var $elm$json$Json$Decode$float = _Json_decodeFloat;
-var $elm$html$Html$h1 = _VirtualDom_node('h1');
-var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
-var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$core$Basics$cos = _Basics_cos;
 var $elm$core$Basics$pi = _Basics_pi;
 var $elm$core$Basics$degrees = function (angleInDegrees) {
 	return (angleInDegrees * $elm$core$Basics$pi) / 180;
 };
 var $elm$core$Basics$sin = _Basics_sin;
-var $author$project$Main$interpreter = function (historique) {
-	var initS = {actuel: _List_Nil, angle: 0, tout: _List_Nil, x: 0, y: 0};
-	var executer = F2(
+var $author$project$Main$commandsToPoints = function (commands) {
+	var updateState = F2(
 		function (cmd, state) {
 			switch (cmd.$) {
-				case 'Teleporter':
-					var tx = cmd.a;
-					var ty = cmd.b;
+				case 'Forward':
+					var dist = cmd.a;
+					var rad = $elm$core$Basics$degrees(state.angle);
+					var newY = state.y + (dist * $elm$core$Basics$sin(rad));
+					var newX = state.x + (dist * $elm$core$Basics$cos(rad));
 					return _Utils_update(
 						state,
 						{
-							actuel: _List_fromArray(
-								[
-									_Utils_Tuple2(tx, ty)
-								]),
-							tout: A2($elm$core$List$cons, state.actuel, state.tout),
-							x: tx,
-							y: ty
-						});
-				case 'Avancer':
-					var d = cmd.a;
-					var ny = state.y + (d * $elm$core$Basics$sin(
-						$elm$core$Basics$degrees(state.angle)));
-					var nx = state.x + (d * $elm$core$Basics$cos(
-						$elm$core$Basics$degrees(state.angle)));
-					return _Utils_update(
-						state,
-						{
-							actuel: _Utils_ap(
-								state.actuel,
+							path: _Utils_ap(
+								state.path,
 								_List_fromArray(
 									[
-										_Utils_Tuple2(nx, ny)
+										_Utils_Tuple2(newX, newY)
 									])),
-							x: nx,
-							y: ny
+							x: newX,
+							y: newY
 						});
-				case 'Gauche':
-					var a = cmd.a;
+				case 'Left':
+					var angle = cmd.a;
 					return _Utils_update(
 						state,
-						{angle: state.angle - a});
-				case 'Droite':
-					var a = cmd.a;
+						{angle: state.angle - angle});
+				case 'Right':
+					var angle = cmd.a;
 					return _Utils_update(
 						state,
-						{angle: state.angle + a});
+						{angle: state.angle + angle});
 				default:
 					var n = cmd.a;
-					var cmds = cmd.b;
+					var subCmds = cmd.b;
 					return A3(
 						$elm$core$List$foldl,
 						F2(
 							function (_v1, s) {
-								return A3($elm$core$List$foldl, executer, s, cmds);
+								return A3($elm$core$List$foldl, updateState, s, subCmds);
 							}),
 						state,
 						A2($elm$core$List$range, 1, n));
 			}
 		});
-	var finalS = A3(
-		$elm$core$List$foldl,
-		F2(
-			function (cmds, s) {
-				return A3($elm$core$List$foldl, executer, s, cmds);
-			}),
-		initS,
-		historique);
-	return A2($elm$core$List$cons, finalS.actuel, finalS.tout);
+	var initialState = {
+		angle: 0,
+		path: _List_fromArray(
+			[
+				_Utils_Tuple2(0, 0)
+			]),
+		x: 0,
+		y: 0
+	};
+	return A3($elm$core$List$foldl, updateState, initialState, commands).path;
 };
-var $elm$html$Html$label = _VirtualDom_node('label');
-var $elm$svg$Svg$Events$on = $elm$html$Html$Events$on;
+var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
+var $elm$core$String$fromFloat = _String_fromNumber;
+var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
+var $elm$svg$Svg$Attributes$points = _VirtualDom_attribute('points');
+var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
+var $elm$svg$Svg$polyline = $elm$svg$Svg$trustedNode('polyline');
+var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
+var $elm$svg$Svg$Attributes$strokeLinecap = _VirtualDom_attribute('stroke-linecap');
+var $elm$svg$Svg$Attributes$strokeLinejoin = _VirtualDom_attribute('stroke-linejoin');
+var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
+var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
+var $elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
+var $author$project$Main$display = function (cmds) {
+	var pts = $author$project$Main$commandsToPoints(cmds);
+	var pointsString = A2(
+		$elm$core$String$join,
+		' ',
+		A2(
+			$elm$core$List$map,
+			function (_v0) {
+				var x = _v0.a;
+				var y = _v0.b;
+				return $elm$core$String$fromFloat(x) + (',' + $elm$core$String$fromFloat(y));
+			},
+			pts));
+	return A2(
+		$elm$svg$Svg$svg,
+		_List_fromArray(
+			[
+				$elm$svg$Svg$Attributes$width('500'),
+				$elm$svg$Svg$Attributes$height('500'),
+				$elm$svg$Svg$Attributes$viewBox('-250 -250 500 500'),
+				A2($elm$html$Html$Attributes$style, 'border', '1px solid #ccc'),
+				A2($elm$html$Html$Attributes$style, 'background', '#f9f9f9')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$svg$Svg$polyline,
+				_List_fromArray(
+					[
+						$elm$svg$Svg$Attributes$points(pointsString),
+						$elm$svg$Svg$Attributes$fill('none'),
+						$elm$svg$Svg$Attributes$stroke('#2ecc71'),
+						$elm$svg$Svg$Attributes$strokeWidth('3'),
+						$elm$svg$Svg$Attributes$strokeLinecap('round'),
+						$elm$svg$Svg$Attributes$strokeLinejoin('round')
+					]),
+				_List_Nil)
+			]));
+};
+var $elm$html$Html$div = _VirtualDom_node('div');
+var $elm$html$Html$h1 = _VirtualDom_node('h1');
+var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$core$Basics$neq = _Utils_notEqual;
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
 };
 var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
 	return {$: 'MayStopPropagation', a: a};
 };
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
 var $elm$html$Html$Events$stopPropagationOn = F2(
 	function (event, decoder) {
 		return A2(
@@ -6294,6 +6194,7 @@ var $elm$html$Html$Events$stopPropagationOn = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
 	});
+var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$at = F2(
 	function (fields, decoder) {
 		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
@@ -6313,27 +6214,6 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 			$elm$html$Html$Events$alwaysStop,
 			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
 };
-var $elm$svg$Svg$Attributes$points = _VirtualDom_attribute('points');
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
-var $elm$core$String$fromFloat = _String_fromNumber;
-var $author$project$Main$pointsToStr = A2(
-	$elm$core$Basics$composeR,
-	$elm$core$List$map(
-		function (_v0) {
-			var x = _v0.a;
-			var y = _v0.b;
-			return $elm$core$String$fromFloat(x) + (',' + $elm$core$String$fromFloat(y));
-		}),
-	$elm$core$String$join(' '));
-var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
-var $elm$svg$Svg$polyline = $elm$svg$Svg$trustedNode('polyline');
-var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
-var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
-var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -6342,16 +6222,19 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			key,
 			$elm$json$Json$Encode$string(string));
 	});
-var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
+var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
-var $elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
 var $author$project$Main$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-				A2($elm$html$Html$Attributes$style, 'padding', '20px'),
+				A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+				A2($elm$html$Html$Attributes$style, 'flex-direction', 'column'),
+				A2($elm$html$Html$Attributes$style, 'align-items', 'center'),
+				A2($elm$html$Html$Attributes$style, 'padding', '40px'),
 				A2($elm$html$Html$Attributes$style, 'font-family', 'sans-serif')
 			]),
 		_List_fromArray(
@@ -6361,110 +6244,51 @@ var $author$project$Main$view = function (model) {
 				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Turtle Interactive')
+						$elm$html$Html$text('Elm Turtle Graphics')
 					])),
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$placeholder('Ex: repeat 36 [ forward 10 left 10 ]'),
+						$elm$html$Html$Attributes$value(model.input),
+						$elm$html$Html$Events$onInput($author$project$Main$UserTyped),
+						A2($elm$html$Html$Attributes$style, 'width', '480px'),
+						A2($elm$html$Html$Attributes$style, 'padding', '12px'),
+						A2($elm$html$Html$Attributes$style, 'font-size', '18px'),
+						A2(
+						$elm$html$Html$Attributes$style,
+						'border',
+						(model.error && (model.input !== '')) ? '2px solid red' : '2px solid #3498db'),
+						A2($elm$html$Html$Attributes$style, 'outline', 'none'),
+						A2($elm$html$Html$Attributes$style, 'border-radius', '8px')
+					]),
+				_List_Nil),
 				A2(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						A2($elm$html$Html$Attributes$style, 'margin-bottom', '20px')
+						A2($elm$html$Html$Attributes$style, 'margin-top', '20px')
 					]),
 				_List_fromArray(
 					[
-						A3($author$project$Main$boutonForme, $author$project$Main$Carre, 'Carré', model),
-						A3($author$project$Main$boutonForme, $author$project$Main$Triangle, 'Triangle', model),
-						A3($author$project$Main$boutonForme, $author$project$Main$Cercle, 'Cercle', model),
-						A3($author$project$Main$boutonForme, $author$project$Main$Rectangle, 'Rectangle', model),
-						A2(
-						$elm$html$Html$label,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$style, 'margin', '0 10px')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Taille : ')
-							])),
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('number'),
-								$elm$html$Html$Attributes$value(
-								$elm$core$String$fromInt(model.taille)),
-								$elm$html$Html$Events$onInput($author$project$Main$ChangerTaille),
-								A2($elm$html$Html$Attributes$style, 'width', '50px')
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$Main$Reset),
-								A2($elm$html$Html$Attributes$style, 'margin-left', '10px'),
-								A2($elm$html$Html$Attributes$style, 'background', 'red'),
-								A2($elm$html$Html$Attributes$style, 'color', 'white')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Effacer')
-							]))
+						$author$project$Main$display(model.commands)
 					])),
-				A2(
+				(model.error && (model.input !== '')) ? A2(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						A2($elm$html$Html$Attributes$style, 'color', '#888'),
-						A2($elm$html$Html$Attributes$style, 'font-size', '12px')
+						A2($elm$html$Html$Attributes$style, 'color', 'red'),
+						A2($elm$html$Html$Attributes$style, 'margin-top', '10px')
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Cliquez dans le cadre pour dessiner')
-					])),
-				A2(
-				$elm$svg$Svg$svg,
-				_List_fromArray(
-					[
-						$elm$svg$Svg$Attributes$width('600'),
-						$elm$svg$Svg$Attributes$height('400'),
-						A2($elm$html$Html$Attributes$style, 'border', '2px solid black'),
-						A2($elm$html$Html$Attributes$style, 'background', 'white'),
-						A2(
-						$elm$svg$Svg$Events$on,
-						'mousedown',
-						A2(
-							$elm$json$Json$Decode$map,
-							$author$project$Main$Cliquer,
-							A3(
-								$elm$json$Json$Decode$map2,
-								$author$project$Main$Ecran,
-								A2($elm$json$Json$Decode$field, 'offsetX', $elm$json$Json$Decode$float),
-								A2($elm$json$Json$Decode$field, 'offsetY', $elm$json$Json$Decode$float))))
-					]),
-				A2(
-					$elm$core$List$map,
-					function (pts) {
-						return A2(
-							$elm$svg$Svg$polyline,
-							_List_fromArray(
-								[
-									$elm$svg$Svg$Attributes$points(
-									$author$project$Main$pointsToStr(pts)),
-									$elm$svg$Svg$Attributes$fill('none'),
-									$elm$svg$Svg$Attributes$stroke('blue'),
-									$elm$svg$Svg$Attributes$strokeWidth('2')
-								]),
-							_List_Nil);
-					},
-					$author$project$Main$interpreter(model.historique)))
+						$elm$html$Html$text('Syntaxe invalide...')
+					])) : $elm$html$Html$text('')
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$sandbox(
-	{
-		init: {formeSelectionnee: $author$project$Main$Carre, historique: _List_Nil, taille: 50},
-		update: $author$project$Main$update,
-		view: $author$project$Main$view
-	});
+	{init: $author$project$Main$init, update: $author$project$Main$update, view: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
 
