@@ -27,4 +27,15 @@ La fonction <code>view</code> assemble les composants HTML, intégrant un champ 
 
 
 
-<h2>Améliorations</h2>
+<h2>Améliorations apportées</h2>
+
+Par rapport à la version de base, nous avons enrichi l'expérience utilisateur avec deux fonctionnalités majeures :
+
+**1. Animation temporelle** : Grâce au module <code>Time</code> et aux <code>subscriptions</code>, le tracé ne s'affiche plus instantanément mais progressivement. Un signal périodique incrémente le nombre de segments visibles, créant une animation fluide.
+
+**2. Avatar dynamique** : Nous avons intégré une image (<code>tortue.png</code>) qui suit la pointe du tracé. L'utilisation de l'attribut <code>transform</code> permet à l'image de pivoter en temps réel selon l'angle de direction calculé.
+
+
+<h2>À noter</h2>
+
+Pour les instructions de très grande taille (ex: <code>repeat 1000 [ forward 100 ]</code>), l'application peut subir des ralentissements. Cela est dû à la structure de données utilisée pour stocker le chemin, qui devient très lourde à recalculer et à afficher en temps réel à chaque étape de l'animation.
