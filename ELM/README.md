@@ -1,27 +1,27 @@
 <h1>Mini-projet TcTurtle</h1>
 
-Bienvenue au Mini-projet TcTurtle de Lilia Boubaker et Marceau Gaillardou.
+Bienvenue sur le projet **TcTurtle**, réalisé par Lilia Boubaker et Marceau Gaillardou.
 
-Le but de ce projet est de créer une page web à l'aide du langage de programmation ELM. Nous avons créé une application web, inspirée de celle proposée par le professeur. Cette dernière nous permet de dessiner des formes à l'aide du module Turtle, en tapant des commandes dans une barre.
+L'objectif de ce travail est de concevoir une application web en utilisant le langage **Elm**. Inspirée de l'exemple proposé en cours, notre interface permet de générer des tracés géométriques grâce à un module "Turtle" piloté par une barre de commandes textuelles.
 
 <h2>Généralités</h2>
 
-Le code permettant de réaliser cela possède le chemin d'accès suivant : <code>../projet/src/Main.elm</code>.
+Le code source de l'application est situé à l'emplacement suivant : <code>../projet/src/Main.elm</code>.
 
-Dans ce code, nous avons commencé par définir les commandes que nous pouvons entrer pour réaliser le dessin, cela à l'aide de <code>type Command</code>. Ensuite, pour encadrer la syntaxe, nous avons utilisé le module <code>Parser</code>.
+Dans ce fichier, nous avons d'abord défini l'ensemble des instructions disponibles via le type <code>type Command</code>. La validation et l'analyse de la syntaxe saisie par l'utilisateur sont assurées par le module <code>Parser</code>.
 
-Puis nous avons défini la logique de la tortue. Ce code transforme une liste d'instructions de déplacement en une suite de coordonnées $(x, y)$ en calculant la nouvelle position par trigonométrie à chaque pas. 
-
-
-
-Il utilise un accumulateur <code>foldl</code> pour mémoriser la position et l'angle actuels de la "tortue" afin de tracer le chemin complet point par point.
-
-Le bout de code d'après gère l'état de l'application en transformant en temps réel le texte saisi par l'utilisateur en une liste de commandes exploitables à l'aide de <code>init</code>. Si le texte est valide, il met à jour le dessin (commands) avec <code>update</code>, sinon il déclenche un indicateur d'erreur pour avertir l'utilisateur.
+Ensuite, nous avons implémenté la **logique de la tortue**. Ce module convertit la liste des commandes en une suite de coordonnées $(x, y)$ en calculant, pour chaque étape, la nouvelle position à l'aide de fonctions trigonométriques. 
 
 
 
-Enfin, la dernière partie génère l'interface utilisateur en transformant la liste de coordonnées en un dessin géométrique via une balise SVG <code>polyline</code>.
-La fonction <code>view</code> assemble ensuite les éléments HTML : elle affiche un champ de saisie stylisé (qui devient rouge en cas d'erreur) et le rendu visuel du tracé de la tortue.
+Le calcul repose sur l'utilisation d'un accumulateur <code>foldl</code>, qui mémorise dynamiquement la position et l'orientation de la tortue pour générer le tracé complet.
+
+La section suivante assure la **gestion de l'état** (Architecture MVU). Elle interprète en temps réel la saisie de l'utilisateur pour mettre à jour le modèle via les fonctions <code>init</code> et <code>update</code>. Si la syntaxe est correcte, les nouvelles commandes sont appliquées au dessin ; dans le cas contraire, un signal d'erreur est activé.
+
+
+
+Enfin, la dernière partie est dédiée à l'**interface utilisateur**. Elle traduit les coordonnées calculées en une forme visuelle grâce à la balise SVG <code>polyline</code>. 
+La fonction <code>view</code> assemble les composants HTML, intégrant un champ de saisie réactif (dont la bordure devient rouge en cas d'erreur de syntaxe) ainsi que le rendu graphique final du tracé.
 
 
 
