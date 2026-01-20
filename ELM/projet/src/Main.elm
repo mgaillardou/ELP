@@ -143,6 +143,9 @@ display model =
             , SvgAttr.stroke "#f5150a" 
             , SvgAttr.strokeWidth "3" 
             , SvgAttr.strokeLinecap "round" 
+            , SvgAttr.stroke "#fb03b0"
+            , SvgAttr.strokeWidth "3"
+            , SvgAttr.strokeLinecap "round"
             , SvgAttr.strokeLinejoin "round"
             ] []
         , image
