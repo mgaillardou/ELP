@@ -8,6 +8,8 @@ L'objectif de ce travail est de concevoir une application web en utilisant le la
 
 Le code source de l'application est situé à l'emplacement suivant : <code>../projet/src/Main.elm</code>.
 
+Afin d'exécuter le script, tapez cette commande dans votre terminal : <code>elm make src/Main.elm --output=index.html</code>
+
 Dans ce fichier, nous avons d'abord défini l'ensemble des instructions disponibles via le type <code>type Command</code>. La validation et l'analyse de la syntaxe saisie par l'utilisateur sont assurées par le module <code>Parser</code>.
 
 Ensuite, nous avons implémenté la **logique de la tortue**. Ce module convertit la liste des commandes en une suite de coordonnées $(x, y)$ en calculant, pour chaque étape, la nouvelle position à l'aide de fonctions trigonométriques. 
