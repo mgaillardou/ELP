@@ -1,0 +1,139 @@
+===========================================================
+      SYNTAXE DE BASE JAVASCRIPT (Cheat Sheet)
+===========================================================
+
+1. VARIABLES & TYPES
+-----------------------------------------------------------
+const nom = "Gaillardou"; // Ne change jamais
+let age = 25;            // Peut être modifié
+let estPret = true;      // Booléen (true/false)
+
+2. LES CONDITIONS (IF / ELSE)
+-----------------------------------------------------------
+if (age >= 18) {
+    console.log("Majeur");
+} else if (age > 13) {
+    console.log("Adolescent");
+} else {
+    console.log("Enfant");
+}
+
+// Opérateurs : === (égal), !== (différent), && (ET), || (OU), ! (NON)
+
+3. LES BOUCLES (LOOPS)
+-----------------------------------------------------------
+const fruits = ["Pomme", "Banane", "Fraise"];
+
+// Parcourir simplement (Le plus utilisé)
+for (const fruit of fruits) {
+    console.log(fruit);
+}
+
+// Boucle classique (avec index)
+for (let i = 0; i < fruits.length; i++) {
+    console.log(`Index ${i} : ${fruits[i]}`);
+}
+
+// Boucle "Tant que"
+let pile = 3;
+while (pile > 0) {
+    console.log("En marche...");
+    pile--;
+}
+
+4. MANIPULER LES LISTES (ARRAYS)
+-----------------------------------------------------------
+const liste = ["Lyon", "Paris"];
+
+liste.push("Marseille");      // Ajouter à la fin
+liste.unshift("Lille");       // Ajouter au début
+liste.pop();                  // Supprimer le dernier
+liste.length;                 // Taille de la liste (ici: 3)
+
+// Vérifier la présence
+if (liste.includes("Paris")) {
+    console.log("Paris est dans la liste");
+}
+
+// Filtrer la liste (crée une nouvelle liste selon un critère)
+const nombres = [10, 5, 20, 15];
+const grands = nombres.filter(n => n > 12); // [20, 15]
+
+// Transformer la liste
+const double = nombres.map(n => n * 2); // [20, 10, 40, 30]
+
+//fusionner listes
+const liste1 = [1, 2];
+const liste2 = [3, 4];
+
+// On "déballe" les deux listes dans une nouvelle
+const fusion = [...liste1, ...liste2]; 
+
+console.log(fusion); // Résultat : [1, 2, 3, 4]
+
+//creer listes meme elements
+const liste = Array(14).fill("a");
+
+console.log(liste);
+// Résultat : ["a", "a", "a", ..., "a"] (14 fois)
+
+//prendre une valeur aléatoire dans une liste
+const fruits = ["Pomme", "Banane", "Fraise", "Kiwi"];
+
+// On multiplie par la longueur du tableau
+const indexAleatoire = Math.floor(Math.random() * fruits.length);
+=> Math.floor = partie entière
+=> Math.random = proba entre 0 et 1
+
+const fruitChoisi = fruits[indexAleatoire];
+
+console.log(`Le destin a choisi : ${fruitChoisi}`);
+
+// la methode splice 
+
+tableau.splice(départ, nbASupprimer, item1, item2, ...);
+
+départ : L'index où on commence (0 pour le premier).
+
+nbASupprimer : Combien d'éléments on retire à partir de là.
+
+item1, item2... (optionnel) : Ce qu'on veut insérer à la place.
+
+ ==> supprimer
+const fruits = ["Pomme", "Banane", "Fraise"];
+const retire = fruits.splice(1, 1); 
+
+console.log(fruits); // ["Pomme", "Fraise"]
+console.log(retire); // ["Banane"] (Attention : renvoie toujours un tableau !)
+
+==> rajouter
+
+const couleurs = ["Rouge", "Bleu"];
+couleurs.splice(1, 0, "Vert"); 
+
+console.log(couleurs); // ["Rouge", "Vert", "Bleu"]
+
+==> remplacer 
+
+const jours = ["Lundi", "Mardi", "MauvaisJour"];
+jours.splice(2, 1, "Mercredi"); 
+
+console.log(jours); // ["Lundi", "Mardi", "Mercredi"]
+
+
+
+5. LES FONCTIONS
+-----------------------------------------------------------
+// Version moderne (Fléchée)
+const saluer = (nom) => {
+    return `Salut ${nom}`;
+};
+
+console.log(saluer("Gaillardou"));
+
+6. CONSEILS PRATIQUES
+-----------------------------------------------------------
+- Utilise toujours `===` au lieu de `==`.
+- Utilise les `backticks` (``) avec `${variable}` pour tes messages.
+- Lance ton fichier avec : node nom_du_fichier.js
+===========================================================
