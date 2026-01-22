@@ -2,6 +2,8 @@
       SYNTAXE DE BASE JAVASCRIPT (Cheat Sheet)
 ===========================================================
 
+TUER NODE ==> killall node
+
 1. VARIABLES & TYPES
 -----------------------------------------------------------
 const nom = "Gaillardou"; // Ne change jamais
@@ -54,6 +56,12 @@ liste.length;                 // Taille de la liste (ici: 3)
 if (liste.includes("Paris")) {
     console.log("Paris est dans la liste");
 }
+
+//Parcourir chaque elements d'une liste
+monTableau.forEach((element) => {
+    // Ton code ici
+    console.log(element);
+});
 
 // Filtrer la liste (crée une nouvelle liste selon un critère)
 const nombres = [10, 5, 20, 15];

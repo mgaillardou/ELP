@@ -16,8 +16,9 @@ for (const l in inventaire)
     liste = [...liste, ...groupe];
 }
 
-console.log(liste);
+//console.log(liste);
 console.log(`Total de lettres : ${liste.length}`);
+console.log('')
 
 const piocherLettre = (liste) => {
 	const indice = Math.floor(Math.random()*liste.length);
@@ -34,6 +35,9 @@ const creerTableau = (taille = 9, tab = []) => {
 }
 
 const verifie_Mot_Bon = (lettres_piochees, mot) => {
+	if (mot.length < 3) {
+		return [0,lettres_piochees]
+	}
 	let lettres_dispos = [...lettres_piochees];
 	let verif = 0
 	for (let i=0; i<mot.length;i++){
@@ -55,6 +59,56 @@ const verifie_Mot_Bon = (lettres_piochees, mot) => {
 	return [0,lettres_piochees]
 }
 
+const verifChoixJoueur = (choix, tab, lettres_en_main) => {
+    if (choix === 'a') {
+        let numLigne = parseInt(prompt("Quelle ligne veux-tu modifier (0-7) ? "));
+        if (isNaN(numLigne) || numLigne < 0 || numLigne > 7 || tab[numLigne][0] === 0) {
+            console.log("❌ Ligne invalide ou vide.");
+            return [0, lettres_en_main];
+        }
+
+        let anciennesLettres = tab[numLigne].filter(c => c !== 0);
+        console.log(`Lettres à conserver : ${anciennesLettres.join('')}`);
+        let nouveauMot = prompt("Tape le nouveau mot complet : ");
+
+        // Vérifier qu'on n'a pas enlevé de lettres existantes
+        let copieNouveau = nouveauMot.split('');
+        let testAnciennes = true;
+        anciennesLettres.forEach(L => {
+            let idx = copieNouveau.indexOf(L);
+            if (idx !== -1) copieNouveau.splice(idx, 1);
+            else testAnciennes = false;
+        });
+
+        if (!testAnciennes) {
+            console.log("❌ Erreur : Tu dois garder toutes les lettres d'origine !");
+            return [0, lettres_en_main];
+        }
+
+        // Vérifier que le surplus est dans la main (minLettres = 0 ici)
+        let [valide, reste] = verifie_Mot_Bon(lettres_en_main, copieNouveau.join(''), 0);
+        if (valide) {
+            tab[numLigne].fill(0);
+            nouveauMot.split('').forEach((l, i) => { if(i < 9) tab[numLigne][i] = l; });
+            return [1, reste];
+        } else {
+            console.log("❌ Tu n'as pas les lettres en main pour compléter.");
+            return [0, lettres_en_main];
+        }
+    } 
+    else if (choix === 'b') {
+        let mot = prompt("Nouveau mot (min 3 lettres) : ");
+        let [valide, reste] = verifie_Mot_Bon(lettres_en_main, mot, 3);
+        if (valide) {
+            remplissageTableau(tab, mot);
+            return [1, reste];
+        }
+        console.log("❌ Mot invalide.");
+        return [0, lettres_en_main];
+    }
+    return [0, lettres_en_main];
+};
+
 const remplissageTableau = (tab, mot) => {
 	let indice = 0;
 	for (let i = 0; i<tab.length; i++){
@@ -69,53 +123,96 @@ const remplissageTableau = (tab, mot) => {
 	return tab
 }
 
-tab = creerTableau();
+const piocherLettreDepart = (liste, lettres_dispos) => {
+	for (let i=0; i < 5;i++){
+	lettre = piocherLettre(liste);
+	lettres_dispos.push(lettre);
+	}
+}
 
+const afficherTableau = (tab) => {
+	console.log('VOICI TON TABLEAU')
+	for ( let i = 0; i < 8;i++ ) {
+		tab[i].forEach((lettre, j) => {
+			process.stdout.write(lettre + ' ');
+			})
+		console.log('');
+	}
+	console.log('')
+}
+
+tab = creerTableau();
+afficherTableau(tab);
 
 let test = 0;
 let lettres_dispos = [];
+const prompt = require('prompt-sync')();
+let fini = 0;
+piocherLettreDepart(liste, lettres_dispos);
 
-console.log('tu disposes de ces lettres là pour faire ton mot')
+while (fini === 0) {
+    console.log('Tes lettres : ' + lettres_dispos.join(' '));
+    let mot = prompt("Quel mot proposes-tu ? (ou 'pass') : ");
 
-for (let i=0; i < 5;i++){
-	lettre = piocherLettre(liste);
-	lettres_dispos.push(lettre);
-	process.stdout.write(lettre);
-	process.stdout.write(' ');
+    if (mot === 'pass') {
+        console.log("Tu passes ton tour.");
+        // Ici, on ne met pas break si on veut continuer à jouer le tour d'après
+        // On laisse juste la boucle recommencer
+    } 
+    else {
+        let [valide, reste] = verifie_Mot_Bon(lettres_dispos, mot);
+
+        if (valide === 1) {
+            console.log(`"${mot}" ajouté.`);
+            remplissageTableau(tab, mot);
+            lettres_dispos = reste;
+
+            let n = piocherLettre(liste);
+            if (n) lettres_dispos.push(n);
+            afficherTableau(tab);
+
+            let tourEnCours = true;
+            let quitterTout = false; // <--- On crée cette variable
+
+            while (tourEnCours) {
+				console.log('Tes lettres : ' + lettres_dispos.join(' '));
+                console.log('\nQue veux-tu faire maintenant ?');
+                console.log('a) Modifier | b) Nouveau | c) Terminer tour (Quitter)');
+                
+                let choix = prompt("Ton choix (a/b/c) : ");
+
+                if (choix === 'c') {
+                    quitterTout = true; // On signale qu'on veut sortir
+                    break; // On sort de la boucle "tourEnCours"
+                } 
+                else if (choix === 'a' || choix === 'b') {
+                    let [succes, nouveauReste] = verifChoixJoueur(choix, tab, lettres_dispos);
+                    if (succes === 1) {
+                        lettres_dispos = nouveauReste;
+                        let n2 = piocherLettre(liste);
+                        if (n2) lettres_dispos.push(n2);
+                        afficherTableau(tab);
+                    }
+                }
+            }
+
+            // Si on a tapé 'c', on utilise le signal pour sortir de la boucle principale
+            if (quitterTout) {
+                console.log("Fin du tour demandée.");
+                // Si tu veux arrêter le JEU : fini = 1;
+                // Si tu veux juste passer au tour SUIVANT : continue;
+                break; 
+            }
+
+        } else {
+            console.log("Mot incorrect.");
+        }
+    }
+
+    if (tab[7][0] !== 0) {
+        fini = 1;
+        console.log("Grille terminée");
+    }
 }
 console.log('')
-const prompt = require('prompt-sync')();
-let mot = prompt("quel mot as-tu trouvé ? ");
-let resultat = verifie_Mot_Bon(lettres_dispos, mot);
-
-while (test === 0){ 
-
-	while (resultat[0]===0 && mot != 'pass'){
-		mot = prompt("reessaye encore, quel mot as-tu trouvé ? ");
-		resultat = verifie_Mot_Bon(lettres_dispos, mot);
-	}
-	
-	console.log(mot);
-	if (mot === 'pass'){
-		console.log('c est pas grave d abandonner');
-	}
-	else{
-		console.log('bravo ça marche');
-		remplissageTableau(tab, mot);
-		lettres_dispos = resultat[1];
-	}
-	if (tab[3][0] !== 0){
-		test = 1;
-	}
-	else{
-		console.log('tu disposes de ces lettres là pour faire ton mot')
-		lettre = piocherLettre(liste);
-		lettres_dispos.push(lettre);
-		for (let i=0; i<lettres_dispos.length; i++){
-			process.stdout.write(lettres_dispos[i]);
-			process.stdout.write(' ');
-		}
-	}
-	
-}
-console.log(lettres_dispos)
+console.log('fin de tour')
