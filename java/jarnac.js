@@ -59,8 +59,39 @@ const verifie_Mot_Bon = (lettres_piochees, mot) => {
 	return [0,lettres_piochees]
 }
 
+const choix_joueur_a = (lettres_en_main, tab) => {
+    let numLigne = parseInt(prompt("Quelle ligne veux-tu modifier (0-7) ? "));
+        if (isNaN(numLigne) || numLigne < 0 || numLigne > 7 || tab[numLigne][0] === 0) {
+            console.log("Ligne invalide ou vide.");
+            return [0, lettres_en_main];
+        }
+    let anciennesLettres = tab[numLigne].filter(c => c !== 0);
+    console.log(`Lettres à conserver : ${anciennesLettres.join('')}`);
+    let nouvelle_lettre = piocherLettre(liste)
+    console.log(`Nouvelle lettre : ${nouvelle_lettre}`);
+    let nouveauMot = prompt("Tape le nouveau mot complet : ");
+    let copieNouveau = nouveauMot.split('');
+    let inclu = true;
+    anciennesLettres.forEach((lettre) => {
+        let idx = copieNouveau.indexOf(lettre);
+        if (idx === -1) {
+            if (inclu) { 
+                console.log("Erreur : Tu dois garder toutes les lettres d'origine !");
+                inclu = false;
+            }
+        }   
+        else copieNouveau.splice(idx, 1);
+    if (inclu && !nouveauMot.includes(nouvelle_lettre)) {
+        console.log("Erreur : Tu as oublié la nouvelle lettre !");
+        inclu = false;
+    }
+});
+
+}
+
+
 const verifChoixJoueur = (choix, tab, lettres_en_main) => {
-    if (choix === 'a') {
+    /*if (choix === 'a') {
         let numLigne = parseInt(prompt("Quelle ligne veux-tu modifier (0-7) ? "));
         if (isNaN(numLigne) || numLigne < 0 || numLigne > 7 || tab[numLigne][0] === 0) {
             console.log("❌ Ligne invalide ou vide.");
@@ -76,6 +107,7 @@ const verifChoixJoueur = (choix, tab, lettres_en_main) => {
         let testAnciennes = true;
         anciennesLettres.forEach(L => {
             let idx = copieNouveau.indexOf(L);
+            console.log(idx);
             if (idx !== -1) copieNouveau.splice(idx, 1);
             else testAnciennes = false;
         });
@@ -95,7 +127,11 @@ const verifChoixJoueur = (choix, tab, lettres_en_main) => {
             console.log("❌ Tu n'as pas les lettres en main pour compléter.");
             return [0, lettres_en_main];
         }
-    } 
+    }*/
+    
+    if (choix === 'a') {
+        choix_joueur_a(lettres_en_main, tab);
+    }
     else if (choix === 'b') {
         let mot = prompt("Nouveau mot (min 3 lettres) : ");
         let [valide, reste] = verifie_Mot_Bon(lettres_en_main, mot, 3);
