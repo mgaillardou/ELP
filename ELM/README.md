@@ -6,9 +6,9 @@ L'objectif de ce travail est de concevoir une application web en utilisant le la
 
 <h2>Généralités</h2>
 
-Le code source de l'application est situé à l'emplacement suivant : <code>../projet/src/Main.elm</code>.
+Le code source de l'application est situé à l'emplacement suivant : <code>../projet/</code>.
 
-Afin d'exécuter le script, tapez cette commande dans votre terminal : <code>elm make src/Main.elm --output=index.html</code>
+Afin d'exécuter le script, tapez cette commande dans votre terminal : <code>elm make src/Main.elm --output=app.js</code>
 
 
 Dans ce fichier, nous avons d'abord défini l'ensemble des instructions disponibles via le type <code>type Command</code>. La validation et l'analyse de la syntaxe saisie par l'utilisateur sont assurées par le module <code>Parser</code>.
