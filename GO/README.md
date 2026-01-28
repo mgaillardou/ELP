@@ -23,7 +23,7 @@ Nous avons rapidement constaté que le nombre de nœuds restait trop important. 
 
 Le serveur est lancé en exécutant le script `server.go` dans un terminal. Il écoute sur un socket et attend les connexions des clients. Ces derniers se connectent en exécutant le script `client.go` dans un autre terminal, en précisant le fichier JSON à utiliser.
 
-> **Note :** pour exécuter un programme Go, la commande est `go run server.go`. Pour le client, par exemple : `go run client.go json_reduit_1.json`.
+> **Note :** pour exécuter un programme Go, la commande est `go run server.go`. Pour le client, par exemple : `go run client.go` et ensuite renseigné le chemin absolu pour accéder au fichier json, par exemple : `'/Users/gaillardou/Desktop/ELP/GO/echantillon_client/json_reduit_1.json'`
 
 Le serveur utilise un ensemble de workers chargés de traiter des jobs.  
 Un job correspond au calcul des distances depuis un nœud donné vers tous les autres nœuds du graphe à l’aide de l’algorithme de Dijkstra.  
