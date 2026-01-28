@@ -91,7 +91,6 @@ func dijkstra(graph map[string]Node, start string) map[string]float64 {
 	return distances
 }
 
-// --- Dans handleClient ---
 func handleClient(conn net.Conn, jobs chan Job) {
     defer conn.Close()
     reader := bufio.NewReader(conn)
@@ -105,7 +104,6 @@ func handleClient(conn net.Conn, jobs chan Job) {
 
     resultCh := make(chan DijkstraResult, nodeCount)
 
-    // Lancement de l'envoi des jobs
     go func() {
         for nodeName := range graph {
             jobs <- Job{Start: nodeName, ResultCh: resultCh, Graph: graph}
@@ -122,8 +120,6 @@ func handleClient(conn net.Conn, jobs chan Job) {
             fmt.Printf("Avancement : %d/%d\n", i, nodeCount)
         }
     }
-
-	// ... (après la boucle de collecte des résultats)
 
     // Nettoyage des valeurs +Inf avant l'encodage
     for _, distances := range allResults {
@@ -142,10 +138,8 @@ func handleClient(conn net.Conn, jobs chan Job) {
     fmt.Println("Calcul APSP terminé et envoyé.")
 }
 
-// --- Dans worker (ajusté pour renvoyer toutes les distances) ---
 func worker(id int, jobs <-chan Job) {
     for job := range jobs {
-        // Le worker traite le job et envoie dans le channel spécifique au client
         distances := dijkstra(job.Graph, job.Start)
         job.ResultCh <- DijkstraResult{
             Start:     job.Start,
@@ -156,12 +150,11 @@ func worker(id int, jobs <-chan Job) {
 
 // --- Main ---
 func main() {
-    // Supprimez loadGraph d'ici, on le fera par client
     numWorkers := 4
     jobs := make(chan Job, 100)
 
     for w := 1; w <= numWorkers; w++ {
-        go worker(w, jobs) // Appel sans le graphe
+        go worker(w, jobs)
     }
 
     ln, err := net.Listen("tcp", ":9000")
@@ -170,7 +163,6 @@ func main() {
 
     for {
         conn, _ := ln.Accept()
-        // On ne passe plus 'graph' ici (erreur 166 corrigée)
         go handleClient(conn, jobs) 
     }
 }
