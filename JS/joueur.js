@@ -34,59 +34,84 @@ export class Joueur {
         });
         return numerosPures
     }
-    recupereCarteSpeciale(carte, paquet, liste_joueurs){
-        if (carte === 'chance') {
-            this.cartes_main.unshift(carte); 
-            console.log('tu as une deuxième vie')
+    
+    recupereCarteSpeciale(carte, paquet, liste_joueurs) {
+    const prompt = promptSync();
+
+    if (carte === 'chance') {
+        this.cartes_main.unshift(carte);
+        console.log('Tu as une deuxième vie !');
+    } 
+    else if (carte === 'x2') {
+        this.cartes_main.push(carte);
+        console.log('Tu peux doubler le score de cette manche.');
+    } 
+    else {
+        const ciblesPossibles = liste_joueurs;
+        const nomsCibles = ciblesPossibles.map(j => j.nom);
+        
+        if (ciblesPossibles.length === 0) {
+            console.log(`Tu as pioché ${carte}, mais tu es seul en jeu. La carte est défaussée.`);
+            return;
         }
-        else if (carte === 'x2') {
-            this.cartes_main.push(carte); 
-            console.log('tu peux doubler le score de cette manche')
+
+        let choix = "";
+        let victime = null;
+
+        while (!victime) {
+            console.log(`Tu as la carte spéciale : ${carte}`);
+            choix = prompt(`À qui veux-tu la donner ? (${nomsCibles.join(', ')}) : `);
+            
+            victime = ciblesPossibles.find(j => j.nom === choix);
+
+            if (!victime) {
+                console.log("Nom invalide. Merci de choisir un joueur dans la liste.");
+            }
         }
-        else{
-            const prompt = promptSync();
-            let choix = prompt('tu as cette carte spéciale : '+carte+' a qui veux tu la donner (1, 2, 3, 4')
-            liste_joueurs.forEach((joueur) => {
-                if (choix === joueur.nom)
-                    if (carte === 'freeze'){
-                        joueur.etat.push(carte)
-                    }
-                    else {
-                        for (let i=0; i<3; i++){
-                            joueur.jouerTour(paquet, liste_joueurs)
-                            if (joueur.cartes_main.length === 0){
-                                break
-                            }
-                        }
-                    }
-            })
+
+        if (carte === 'freeze') {
+            victime.etat.push(carte);
+            console.log(`${victime.nom} est gelé !`);
+        } 
+        else {
+            console.log(`${victime.nom} subit un FLIP et doit jouer 3 fois !`);
+            for (let i = 0; i < 3; i++) {
+                let estMort = victime.jouerTour(paquet, liste_joueurs);
+                if (estMort) {
+                    break; 
+                }
+                if (victime.cartes_main.length === 0) break;
+            }
+            return false; 
         }
     }
+}
     
-    jouerTour(paquet, liste_joueurs){
-        let carte = this.piocherCarte(paquet)
-        let test = this.verifCarte(carte)
+    jouerTour(paquet, liste_joueurs) {
+
+        let carte = this.piocherCarte(paquet);
+        let test = this.verifCarte(carte);
         
-        if (test === 1){
+        if (test === 1) {
             this.cartes_main.push(carte);
-            this.ajouteScoreTemp(carte)
-            console.log('cartes :' + this.cartes_main)
-            console.log('score temp '+ this.score_temp)
+            this.ajouteScoreTemp(carte);
+            return false; 
         }
-        else if (test === 0){
-            if (this.cartes_main[0] === 'chance'){
+        else if (test === 0) {
+            if (this.cartes_main[0] === 'chance') {
                 this.cartes_main.splice(0, 1); 
+                console.log("Chance utilisée !");
+                return false; 
+            } else {
+                this.cartes_main = [];
+                this.score_temp = 0;
+                return true; 
             }
-            else {
-                console.log("Perdu");
-                this.cartes_main=[]
-                this.score_temp = 0
-            }
-            
         }
         else {
-            console.log('carte speciale')
-            this.recupereCarteSpeciale(carte, paquet, liste_joueurs)
+            // ICI : On renvoie false car piocher une spéciale ne fait pas mourir le tireur
+            this.recupereCarteSpeciale(carte, paquet, liste_joueurs);
+            return false; 
         }
     }
 

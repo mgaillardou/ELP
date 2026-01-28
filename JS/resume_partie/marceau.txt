@@ -1,0 +1,12 @@
+manche 1
+cartes : 
+score : 0
+choix de continuer : y
+cartes : 5
+score : 5
+choix de continuer : y
+cartes : 5,11
+score : 16
+choix de continuer : y
+cartes : 
+score : 0
