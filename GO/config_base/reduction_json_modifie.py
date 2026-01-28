@@ -11,8 +11,8 @@ with open("sortie.json", 'r', encoding='utf-8') as f:
     dico = json.load(f)
     
 # Définition du rectangle géographique
-lat_min, lat_max = 45.7475, 45.7576
-lon_min, lon_max = 4.83, 4.835
+lat_min, lat_max = 45.7475, 45.761
+lon_min, lon_max = 4.83, 4.836
 
 # 1) Filtrage des noeuds par coordonnées
 dico_filtre = {
@@ -33,7 +33,7 @@ dico = dico_filtre
 
 print(len(dico))
 
-with open("echantillon_client/json_reduit_4.json", 'w', encoding='utf-8') as f:
+with open(f"echantillon_client/json_reduit_{len(dico)}.json", 'w', encoding='utf-8') as f:
     json.dump(dico, f, ensure_ascii=False, indent=4)
 
 print("Copie terminée avec succès.")
