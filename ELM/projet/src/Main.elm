@@ -87,8 +87,8 @@ conversions_commandes_points commands =
 
 -- UPDATE
 type alias Model = -- elements pour que la page fonctionne
-    { input : String
-    , allSteps : List PointAxe 
+    { input : String -- ce que tape l'utilisateur
+    , allSteps : List PointAxe -- liste des points a parcourur pour animation
     , visibleSteps : Int    
     , error : Bool
     }

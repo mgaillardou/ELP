@@ -1,3 +1,0 @@
-manche 1
-cartes : 
-score : 0
