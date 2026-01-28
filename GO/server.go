@@ -4,10 +4,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net"
 	"os"
 	"strings"
-	"math"
 )
 
 type Node struct {
@@ -23,9 +23,9 @@ type DijkstraResult struct {
 }
 
 type Job struct {
-    Start    string
-    ResultCh chan DijkstraResult
-    Graph    map[string]Node
+	Start    string
+	ResultCh chan DijkstraResult
+	Graph    map[string]Node
 }
 
 // --- Dijkstra & minimum functions (same as before) ---
@@ -87,84 +87,89 @@ func dijkstra(graph map[string]Node, start string) map[string]float64 {
 			}
 		}
 	}
-	fmt.Println("Processed node:", start)
+	fmt.Println("Noeuds traités : ", start)
 	return distances
 }
 
 func handleClient(conn net.Conn, jobs chan Job) {
-    defer conn.Close()
-    reader := bufio.NewReader(conn)
+	defer conn.Close()
+	reader := bufio.NewReader(conn)
 
-    msg, err := reader.ReadString('\n')
-    if err != nil { return }
+	msg, err := reader.ReadString('\n')
+	if err != nil {
+		return
+	}
 
-    path := strings.TrimSpace(msg)
-    graph := loadGraph(path) 
-    nodeCount := len(graph)
+	path := strings.TrimSpace(msg)
+	graph := loadGraph(path)
+	nodeCount := len(graph)
 
-    resultCh := make(chan DijkstraResult, nodeCount)
+	resultCh := make(chan DijkstraResult, nodeCount)
 
-    go func() {
-        for nodeName := range graph {
-            jobs <- Job{Start: nodeName, ResultCh: resultCh, Graph: graph}
-        }
-    }()
+	go func() {
+		for nodeName := range graph {
+			jobs <- Job{Start: nodeName, ResultCh: resultCh, Graph: graph}
+		}
+	}()
 
-    allResults := make(map[string]map[string]float64)
-    fmt.Printf("Début du calcul pour %d nœuds...\n", nodeCount)
-    
-    for i := 0; i < nodeCount; i++ {
-        res := <-resultCh
-        allResults[res.Start] = res.Distances
-        if i%50 == 0 {
-            fmt.Printf("Avancement : %d/%d\n", i, nodeCount)
-        }
-    }
+	allResults := make(map[string]map[string]float64)
+	fmt.Printf("Début du calcul pour %d nœuds...\n", nodeCount)
 
-    // Nettoyage des valeurs +Inf avant l'encodage
-    for _, distances := range allResults {
-        for destNode, dist := range distances {
-            if math.IsInf(dist, 1) {
-                distances[destNode] = -1
-            }
-        }
-    }
+	for i := 0; i < nodeCount; i++ {
+		res := <-resultCh
+		allResults[res.Start] = res.Distances
+		if i%50 == 0 {
+			fmt.Printf("Avancement : %d/%d\n", i, nodeCount)
+		}
+	}
+
+	// Nettoyage des valeurs +Inf avant l'encodage
+	for _, distances := range allResults {
+		for destNode, dist := range distances {
+			if math.IsInf(dist, 1) {
+				distances[destNode] = -1
+			}
+		}
+	}
+
 	encoder := json.NewEncoder(conn)
-    err = encoder.Encode(allResults)
-    if err != nil {
-        fmt.Println("Erreur lors de l'envoi du JSON:", err)
-    }
-	
-    fmt.Println("Calcul APSP terminé et envoyé.")
+	err = encoder.Encode(allResults)
+	if err != nil {
+		fmt.Println("Erreur lors de l'envoi du JSON:", err)
+	}
+
+	fmt.Println("Calcul APSP terminé et envoyé.")
 }
 
 func worker(id int, jobs <-chan Job) {
-    for job := range jobs {
-        distances := dijkstra(job.Graph, job.Start)
-        job.ResultCh <- DijkstraResult{
-            Start:     job.Start,
-            Distances: distances,
-        }
-    }
+	for job := range jobs {
+		distances := dijkstra(job.Graph, job.Start)
+		job.ResultCh <- DijkstraResult{
+			Start:     job.Start,
+			Distances: distances,
+		}
+	}
 }
 
 // --- Main ---
 func main() {
-    numWorkers := 4
-    jobs := make(chan Job, 100)
+	numWorkers := 4
+	jobs := make(chan Job, 100)
 
-    for w := 1; w <= numWorkers; w++ {
-        go worker(w, jobs)
-    }
+	for w := 1; w <= numWorkers; w++ {
+		go worker(w, jobs)
+	}
 
-    ln, err := net.Listen("tcp", ":9000")
-    if err != nil { panic(err) }
-    fmt.Println("Server listening on :9000")
+	ln, err := net.Listen("tcp", ":9000")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Server listening on :9000")
 
-    for {
-        conn, _ := ln.Accept()
-        go handleClient(conn, jobs) 
-    }
+	for {
+		conn, _ := ln.Accept()
+		go handleClient(conn, jobs)
+	}
 }
 
 func loadGraph(path string) map[string]Node {
