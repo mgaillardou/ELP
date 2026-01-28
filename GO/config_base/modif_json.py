@@ -167,16 +167,9 @@ lats = [v["lat"] for v in dico.values()]
 lons = [v["lon"] for v in dico.values()]
 plt.scatter(lons, lats, s=6, color='blue', label='Noeuds')
 
-# --- 3) Tracé du plus court chemin ---
-if chemin:
-    path_lats = [dico[n]["lat"] for n in chemin]
-    path_lons = [dico[n]["lon"] for n in chemin]
-    plt.plot(path_lons, path_lats, color='red', linewidth=2.5, label='Plus court chemin')
-    plt.scatter(path_lons, path_lats, color='red', s=12)
 
 plt.xlabel("Longitude")
 plt.ylabel("Latitude")
-plt.title("Réseau routier et plus court chemin")
 plt.grid()
 plt.legend()
 plt.show()
