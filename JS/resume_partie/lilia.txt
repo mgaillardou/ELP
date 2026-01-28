@@ -2,9 +2,21 @@ manche 1
 cartes : 
 score : 0
 choix de continuer : y
-cartes : 8
-score : 8
+cartes : 
+score : 0
 choix de continuer : y
-cartes : 8,4
-score : 12
+cartes : 5
+score : 5
 choix de continuer : y
+cartes : 5,+4
+score : 9
+choix de continuer : y
+cartes : 5,+4,10
+score : 19
+choix de continuer : y
+perdu : 0 points
+score total : 0
+fin de manche
+
+
+manche 2

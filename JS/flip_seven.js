@@ -108,12 +108,27 @@ function calculerProbaPerdre(joueur, paquet) {
 viderDossierresumePartie()
 
 let liste = genererPaquet();
+const prompt = promptSync(); // Assure-toi que promptSync est bien initialisé avant
+let liste_joueurs = [];
 
-const joueur1 = new Joueur('marceau');
-const joueur2 = new Joueur('lilia');
+console.log("\n--- INSCRIPTION DES JOUEURS ---");
+console.log("(Laisse vide ou tape 'fin' pour terminer l'ajout)");
 
-let liste_joueurs = [joueur1, joueur2];
-const prompt = promptSync();
+while (true) {
+    let nom = prompt(`Nom du joueur ${liste_joueurs.length + 1} : `).trim();
+    if (nom.toLowerCase() === "fin" || nom === "") {
+        if (liste_joueurs.length < 2) {
+            console.log("⚠️ Il faut au moins 2 joueurs pour commencer la partie !");
+            continue;
+        }
+        break; 
+    }
+    const nouveauJoueur = new Joueur(nom);
+    liste_joueurs.push(nouveauJoueur);
+    console.log(`✅ ${nom} a été ajouté.`);
+}
+
+console.log(`\nLa partie commence avec : ${liste_joueurs.map(j => j.nom).join(', ')}`);
 let manche = 1;
 
 while (liste_joueurs.every(j => j.score < 200)) {

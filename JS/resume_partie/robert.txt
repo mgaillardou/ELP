@@ -1,0 +1,13 @@
+manche 1
+cartes : 11,12,10
+score : 33
+choix de continuer : y
+cartes : 11,12,10,9
+score : 42
+choix de continuer : n
+se retire de la manche
+score total : 42
+fin de manche
+
+
+manche 2
