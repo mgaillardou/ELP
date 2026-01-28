@@ -38,5 +38,5 @@ Afin d’évaluer l’intérêt de l’utilisation de la concurrence via les gor
 Les résultats montrent que l’exécution séquentielle est presque cinq fois plus lente que l’exécution parallèle. L’utilisation de la concurrence permet donc de réduire significativement le temps total de calcul en répartissant les tâches entre plusieurs workers.
 
 <p align="center">
-  <img src="images.png" width="400">
+  <img src="image.png" width="400">
 </p>
