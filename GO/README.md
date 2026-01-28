@@ -9,7 +9,7 @@ Bienvenue sur ce projet en **Golang**, réalisé par Lilia Boubaker et Marceau G
 L’objectif de ce projet est de prendre en main le langage de programmation Golang à travers l’implémentation d’un algorithme exploitant la concurrence à l’aide des goroutines, ainsi que la mise en place d’une communication TCP entre un serveur et plusieurs clients.
 
 Pour cela, nous avons choisi d’implémenter un algorithme permettant de calculer les plus courts chemins dans un graphe connexe. Plus précisément, nous travaillons sur un graphe représentant la ville de Lyon, extrait d’OpenStreetMap.org.  
-Ce graphe contient environ 8 000 nœuds, ce qui rend l’implémentation naïve de l’algorithme de Dijkstra coûteuse en temps de calcul, sa complexité étant de l’ordre de O(N²).
+Ce graphe contient environ 8 000 nœuds, ce qui rend l’implémentation naïve de l’algorithme de Dijkstra coûteuse en temps de calcul, sa complexité étant de l’ordre de O(V²).
 
 Afin d’améliorer les performances, nous avons opté pour une approche APSP (*All-Pairs Shortest Paths*) basée sur Dijkstra. Cette méthode consiste à lancer l’algorithme depuis chaque sommet afin de calculer les distances vers tous les autres sommets du graphe. La complexité devient alors O(V · E · log V), où V représente le nombre de nœuds et E le nombre d’arêtes.
 
