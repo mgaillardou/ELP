@@ -24,9 +24,10 @@ Le jeu fonctionne de la manière suivante :
 1. Un **paquet de cartes** est généré automatiquement en fonction d’un dictionnaire (`dico_cartes`) qui contient toutes les cartes et leur nombre.  
 2. Chaque joueur reçoit ses cartes et joue à tour de rôle tant qu’il n’a pas choisi de se retirer ou que ses cartes ne sont pas épuisées.  
 3. Les effets spéciaux des cartes (`chance`,`flip`, `freeze`) sont appliqués immédiatement pendant le tour du joueur.
-4. Si un joueur se retire, son **score temporaire** est validé et ajouté à son score total, éventuellement modifié par les bonus de cartes.  
-5. Les joueurs perdent la manche automatiquement si leurs cartes sont épuisées ou si un effet spécial les bloque.  
-6. À la fin de chaque manche, les scores et les cartes de chaque joueur sont **enregistrés dans un fichier `.txt` quotidien**, pour conserver l’historique des parties.
+4. La fonction `calculerProbaPerdre()` la probabilité que le joueur perde au prochain tirage, selon les cartes numériques qu’il a en main et les cartes restantes dans le paquet.
+5. Si un joueur se retire, son **score temporaire** est validé et ajouté à son score total, éventuellement modifié par les bonus de cartes.  
+6. Les joueurs perdent la manche automatiquement si leurs cartes sont épuisées ou si un effet spécial les bloque.  
+7. À la fin de chaque manche, les scores et les cartes de chaque joueur sont **enregistrés dans un fichier `.txt`**, pour conserver l’historique des manches de la partie.
 ---
 
 ## Exécution
