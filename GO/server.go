@@ -23,12 +23,11 @@ type DijkstraResult struct {
 }
 
 type Job struct {
-	Start    string
-	ResultCh chan DijkstraResult
-	Graph    map[string]Node
+	Start      string
+	resultChan chan DijkstraResult
+	Graph      map[string]Node
 }
 
-// --- Dijkstra & minimum functions (same as before) ---
 func minimum(distances map[string]float64, visite map[string]bool) string {
 	vMini := math.Inf(1)
 	var kMini string
@@ -43,20 +42,16 @@ func minimum(distances map[string]float64, visite map[string]bool) string {
 
 func dijkstra(graph map[string]Node, start string) map[string]float64 {
 	distances := make(map[string]float64)
-	precedent := make(map[string]string)
 	visite := make(map[string]bool)
 	var attente []string
 
 	for k := range graph {
 		distances[k] = math.Inf(1)
-		precedent[k] = ""
 	}
 	distances[start] = 0
-	precedent[start] = start
 	visite[start] = true
 
 	for voisin, poids := range graph[start].Voisins {
-		precedent[voisin] = start
 		attente = append(attente, voisin)
 		distances[voisin] = distances[start] + poids
 	}
@@ -83,12 +78,23 @@ func dijkstra(graph map[string]Node, start string) map[string]float64 {
 			}
 			if distances[voisin] > distances[noeudMini]+poids {
 				distances[voisin] = distances[noeudMini] + poids
-				precedent[voisin] = noeudMini
 			}
 		}
 	}
 	fmt.Println("Noeuds traités : ", start)
-	return distances
+	return distances // APSP pour un noeud
+}
+
+func loadGraph(path string) map[string]Node {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+	var graph map[string]Node
+	if err := json.Unmarshal(content, &graph); err != nil {
+		panic(err)
+	}
+	return graph
 }
 
 func handleClient(conn net.Conn, jobs chan Job) {
@@ -100,40 +106,39 @@ func handleClient(conn net.Conn, jobs chan Job) {
 		return
 	}
 
-	path := strings.TrimSpace(msg)
+	path := strings.TrimSpace(msg) // enleve espaces et retours a la ligne
 	graph := loadGraph(path)
-	nodeCount := len(graph)
+	nbNoeuds := len(graph)
 
-	resultCh := make(chan DijkstraResult, nodeCount)
+	resultChan := make(chan DijkstraResult, nbNoeuds) // channel de resultats de tailles nbNoeuds
 
 	go func() {
-		for nodeName := range graph {
-			jobs <- Job{Start: nodeName, ResultCh: resultCh, Graph: graph}
+		for nomNoeud := range graph {
+			jobs <- Job{Start: nomNoeud, resultChan: resultChan, Graph: graph}
 		}
 	}()
 
-	allResults := make(map[string]map[string]float64)
-	fmt.Printf("Début du calcul pour %d nœuds...\n", nodeCount)
+	resFinal := make(map[string]map[string]float64)
+	fmt.Printf("Début du calcul pour %d nœuds...\n", nbNoeuds)
 
-	for i := 0; i < nodeCount; i++ {
-		res := <-resultCh
-		allResults[res.Start] = res.Distances
-		if i%50 == 0 {
-			fmt.Printf("Avancement : %d/%d\n", i, nodeCount)
+	for i := 0; i < nbNoeuds; i++ { //bloque et att que tous les workers aient finis
+		res := <-resultChan
+		resFinal[res.Start] = res.Distances
+		if i%100 == 0 {
+			fmt.Printf("Avancement : %d/%d\n", i, nbNoeuds)
 		}
 	}
 
-	// Nettoyage des valeurs +Inf avant l'encodage
-	for _, distances := range allResults {
+	for _, distances := range resFinal {
 		for destNode, dist := range distances {
 			if math.IsInf(dist, 1) {
-				distances[destNode] = -1
+				distances[destNode] = -1 //si distance infinie on renvoie -1
 			}
 		}
 	}
 
 	encoder := json.NewEncoder(conn)
-	err = encoder.Encode(allResults)
+	err = encoder.Encode(resFinal)
 	if err != nil {
 		fmt.Println("Erreur lors de l'envoi du JSON:", err)
 	}
@@ -144,7 +149,7 @@ func handleClient(conn net.Conn, jobs chan Job) {
 func worker(id int, jobs <-chan Job) {
 	for job := range jobs {
 		distances := dijkstra(job.Graph, job.Start)
-		job.ResultCh <- DijkstraResult{
+		job.resultChan <- DijkstraResult{
 			Start:     job.Start,
 			Distances: distances,
 		}
@@ -153,7 +158,7 @@ func worker(id int, jobs <-chan Job) {
 
 // --- Main ---
 func main() {
-	numWorkers := 4
+	numWorkers := 20
 	jobs := make(chan Job, 100)
 
 	for w := 1; w <= numWorkers; w++ {
@@ -170,16 +175,4 @@ func main() {
 		conn, _ := ln.Accept()
 		go handleClient(conn, jobs)
 	}
-}
-
-func loadGraph(path string) map[string]Node {
-	content, err := os.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
-	var graph map[string]Node
-	if err := json.Unmarshal(content, &graph); err != nil {
-		panic(err)
-	}
-	return graph
 }
