@@ -36,12 +36,6 @@ const dico_cartes = {
 	"chance":3
 }
 
-function melanger(paquet) {
-	for (let i = paquet.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1));
-		[paquet[i], paquet[j]] = [paquet[j], paquet[i]];
-	}
-}
 
 function genererPaquet() {
 	let nouveau = [];
@@ -49,7 +43,6 @@ function genererPaquet() {
 		const nb = dico_cartes[l];
 		nouveau = [...nouveau, ...Array(nb).fill(l)];
 	}
-	melanger(nouveau);
 	return nouveau;
 }
 
@@ -108,7 +101,7 @@ function calculerProbaPerdre(joueur, paquet) {
 viderDossierresumePartie()
 
 let liste = genererPaquet();
-const prompt = promptSync(); // Assure-toi que promptSync est bien initialisé avant
+const prompt = promptSync(); 
 let liste_joueurs = [];
 
 console.log("\n--- INSCRIPTION DES JOUEURS ---");
