@@ -32,7 +32,7 @@ const dico_cartes = {
 	"+10":1,
 	"x2":1,
 	"freeze":3,
-	"flip":10,
+	"flip":3,
 	"chance":3
 }
 

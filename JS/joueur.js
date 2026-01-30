@@ -81,7 +81,6 @@ export class Joueur {
                 console.log(`${victime.nom} subit un flip et doit piocher 3 fois !`);
                 
                 for (let i = 0; i < 3; i++) {
-                    console.log(`--- FLIP tour ${i+1}/3 pour ${victime.nom} ---`);
                     let estMort = victime.jouerTour(paquet, liste_joueurs);
                     
                     if (estMort || victime.cartes_main.length === 0) {
