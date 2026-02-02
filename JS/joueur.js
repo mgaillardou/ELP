@@ -100,7 +100,6 @@ export class Joueur {
         }
     }
 
-
     jouerTour(paquet, liste_joueurs) {
 
         let carte = this.piocherCarte(paquet);
