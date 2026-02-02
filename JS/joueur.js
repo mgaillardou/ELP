@@ -36,65 +36,70 @@ export class Joueur {
     }
     
     recupereCarteSpeciale(carte, paquet, liste_joueurs) {
-        const prompt = promptSync();
+    const prompt = promptSync();
 
-        if (carte === 'chance') {
-            this.cartes_main.unshift(carte);
-            console.log('Tu as une deuxième vie !');
-        } 
-        else if (carte === 'x2') {
-            this.cartes_main.push(carte);
-            console.log('Tu peux doubler le score de cette manche.');
-        } 
-        else {
-            let ciblesPossibles;
-            if (carte == 'freeze'){
-                ciblesPossibles = liste_joueurs.filter(j => j.nom !== this.nom);
-            }
-            else{
-                ciblesPossibles = liste_joueurs;
-            }
-            const nomsCibles = ciblesPossibles.map(j => j.nom);
-            if (ciblesPossibles.length === 0) {
-                console.log(`Tu as pioché ${carte}, mais il n'y a plus d'adversaire. La carte est défaussée.`);
-                return;
-            }
+    if (carte === 'chance') return this.carteChance();
+    if (carte === 'x2') return this.carteX2();
 
-            let choix = "";
-            let victime = null;
+    const victimes = this.getCibles(carte, liste_joueurs);
+    if (victimes.length === 0) {
+        console.log(`Tu as pioché ${carte}, mais il n'y a plus d'adversaire. La carte est défaussée.`);
+        return;
+    }
 
-            while (!victime) {
-                console.log(`Tu as la carte spéciale : ${carte}`);
-                choix = prompt(`À qui veux-tu la donner ? (${nomsCibles.join(', ')}) : `);
-                victime = ciblesPossibles.find(j => j.nom === choix);
+    const victime = this.choisirVictime(carte, victimes, prompt);
 
-                if (!victime) {
-                    console.log("Nom invalide. Merci de choisir un joueur dans la liste.");
-                }
-            }
+    if (carte === 'freeze') this.carteFreeze(victime);
+    else if (carte === 'flip') this.carteFlip(victime, paquet, liste_joueurs);
+    }
 
-            if (carte === 'freeze') {
-                victime.etat.push(carte);
-                console.log(`${victime.nom} est gelé !`);
-            } 
-            else if (carte === 'flip') {
-                console.log(`${victime.nom} subit un flip et doit piocher 3 fois !`);
-                
-                for (let i = 0; i < 3; i++) {
-                    let estMort = victime.jouerTour(paquet, liste_joueurs);
-                    
-                    if (estMort || victime.cartes_main.length === 0) {
-                        console.log(`${victime.nom} a perdu pendant son FLIP et est éliminé !`);
-                        const index = liste_joueurs.indexOf(victime);
-                        if (index > -1) {
-                            liste_joueurs.splice(index, 1);
-                        }
-                        break; 
-                    }
-                }
+    carteChance() {
+        this.cartes_main.unshift('chance');
+        console.log('Tu as une deuxième vie !');
+    }
+
+    carteX2() {
+        this.cartes_main.push('x2');
+        console.log('Tu peux doubler le score de cette manche.');
+    }
+
+    getCibles(carte, liste_joueurs) {
+        if (carte === 'freeze') {
+            return liste_joueurs.filter(j => j.nom !== this.nom);
+        }
+        return liste_joueurs;
+    }
+
+    choisirVictime(carte, ciblesPossibles, prompt) {
+        const nomsCibles = ciblesPossibles.map(j => j.nom);
+        let victime = null;
+        while (!victime) {
+            console.log(`Tu as la carte spéciale : ${carte}`);
+            const choix = prompt(`À qui veux-tu la donner ? (${nomsCibles.join(', ')}) : `);
+            victime = ciblesPossibles.find(j => j.nom === choix);
+            if (!victime) console.log("Nom invalide. Merci de choisir un joueur dans la liste.");
+        }
+        return victime;
+    }
+
+    carteFreeze(victime) {
+        victime.etat.push('freeze');
+        console.log(`${victime.nom} est gelé !`);
+    }
+
+    carteFlip(victime, paquet, liste_joueurs) {
+        console.log(`${victime.nom} subit un flip et doit piocher 3 fois !`);
+        for (let i = 0; i < 3; i++) {
+            const estMort = victime.jouerTour(paquet, liste_joueurs);
+            if (estMort || victime.cartes_main.length === 0) {
+                console.log(`${victime.nom} a perdu pendant son FLIP et est éliminé !`);
+                const index = liste_joueurs.indexOf(victime);
+                if (index > -1) liste_joueurs.splice(index, 1);
+                break;
             }
         }
     }
+
 
     jouerTour(paquet, liste_joueurs) {
 
